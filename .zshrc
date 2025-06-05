@@ -115,27 +115,8 @@ alias gg="git for-each-ref --color=always --sort=-committerdate refs/heads/ --fo
 alias django-env='env $(cat .env | xargs)'
 alias django='django-env python ./backend/manage.py'
 alias django-time='stime env $(cat .env | xargs) python ./backend/manage.py'
-alias init='cd ~/workspace/pulse && activate'
-alias pip-install='env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
-alias make-venv='uv venv'
-alias pip-nuke='activate && rm -rf $VIRTUAL_ENV && deactivate && make-venv'
-alias pip-reset='pip-nuke && activate && pip-install'
-alias redis-start='brew services start redis'
-alias redis-stop='brew services stop redis'
 
-# frontend stuff
-alias npm-reset='rm -rf node_modules & npm ci'
-
-alias django-start='init && PYTHONUNBUFFERED=1 honcho start django'
-alias django-test='django test -n --noinput'
-alias vite-start='init && honcho start vite'
-alias maildev-start='init && honcho -f ./tools/Procfile start maildev'
-alias celery-worker-start='init && PYTHONUNBUFFERED=1 honcho -f Procfile.celery start worker'
-alias celery-flower-start='init && PYTHONUNBUFFERED=1 honcho -f Procfile.celery start flower'
-alias storybook-start='init && npm run start-storybook'
-alias add-test-plan='./bin/add-test-plan'
-alias refresh-deps='pip-install && npm ci'
-
+# environment helpers
 # Activate Python virtual envs as "activate", "activate devops"
 activate_venv() {
     venv_dir=".venv"
@@ -147,6 +128,42 @@ activate_venv() {
 }
 
 alias activate='activate_venv'
+
+alias pulse='cd ~/workspace/pulse && activate'
+alias devops='cd ~/workspace/pulse && activate devops'
+
+# backend
+alias make-pulse-venv='uv venv --prompt venv'
+alias make-devops-venv='uv venv --prompt devops .venv-devops'
+
+alias pulse-install-py='env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
+alias pulse-install='pulse && pulse-install && uv pip install ~/requirements.nvim-extras.txt'
+alias pulse-reset-py='pulse && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install && pulse-install'
+
+alias devops-install='devops && uv pip install -r /scripts/devops/requirements.txt'
+alias devops-reset-py='devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
+
+# frontend
+alias pulse-install-npm="pulse && npm ci"
+alias pulse-reset-npm="pulse && rm -rf node_modules && pulse-install-npm"
+
+alias pulse-install='pulse-install-py && pulse-install-npm'
+alias pulse-reset='pulse-reset-py && pulse-reset-npm'
+
+# service
+alias redis-start='brew services start redis'
+alias redis-stop='brew services stop redis'
+
+# local app
+alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'
+alias django-test='django test -n --noinput'
+alias vite-start='pulse && honcho start vite'
+alias maildev-start='pulse && honcho -f ./tools/Procfile start maildev'
+alias celery-worker-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile.celery start worker'
+alias celery-flower-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile.celery start flower'
+alias storybook-start='pulse && npm run start-storybook'
+alias add-test-plan='./bin/add-test-plan'
+alias refresh-deps='pip-install && npm ci'
 
 # fix stuff
 alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid & brew services restart postgresql@14'

@@ -27,8 +27,20 @@ local debug_configs = {
     name = "Django Test",
     program = "${workspaceFolder}/backend/manage.py",
     args = function()
-      local test_path = vim.fn.input("Test file (e.g. app.test_jedi): ")
-      return { "test", "--noinput", "--nomigrations", test_path }
+      -- Extract the part after "backend/"
+      local guessed_path = vim.fn.expand("%:p:r"):match("backend/(.+)")
+      if guessed_path then
+        guessed_path = guessed_path:gsub("%.py", ""):gsub("/", ".")
+      else
+        guessed_path = ""
+      end
+
+      local test_path = vim.fn.input("Test file (e.g. app.test_jedi): ", guessed_path)
+      if test_path == nil or test_path == "" then
+        error("No test path provided")
+      end
+
+      return { "test", "--noinput", "--nomigrations", "--exclude-tag=aft", test_path }
     end,
     django = true,
     justMyCode = false,
@@ -43,18 +55,10 @@ return {
     "mfussenegger/nvim-lint",
     opts = {
       linters_by_ft = {
-        python = { "flake8", "mypy" },
+        python = { "ruff", "mypy" },
       },
     },
     linters = {
-      flake8 = {
-        cmd = function()
-          return venv and (venv .. "/bin/flake8") or "flake8"
-        end,
-        args = { "--format=%(code)s:%(text)s" },
-        stdin = false,
-        ignore_exitcode = true,
-      },
       -- A lot of effort to use dmypy. Is it worth it? Maybe.
       mypy = {
         cmd = function()
@@ -91,20 +95,13 @@ return {
     },
   },
   -- Formatting
+  -- Maybe this should move to its own "formatting" plugin?
   {
     "stevearc/conform.nvim",
     opts = {
       formatters_by_ft = {
-        python = { "black", "isort" },
-      },
-      formatters = {
-        black = {
-          command = function()
-            return venv and (venv .. "/bin/black") or "black"
-          end,
-          args = { "--quiet", "-" },
-          stdin = true,
-        },
+        python = { "ruff" },
+        toml = { "taplo" },
       },
     },
   },

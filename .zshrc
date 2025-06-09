@@ -140,8 +140,8 @@ alias pulse-install-py='env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags`
 alias pulse-install='pulse && pulse-install && uv pip install ~/requirements.nvim-extras.txt'
 alias pulse-reset-py='pulse && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install && pulse-install'
 
-alias devops-install='devops && uv pip install -r /scripts/devops/requirements.txt'
-alias devops-reset-py='devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
+alias devops-install='devops && uv pip install -r scripts/devops/requirements.txt'
+alias devops-reset-py='pulse-devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
 
 # frontend
 alias pulse-install-npm="pulse && npm ci"

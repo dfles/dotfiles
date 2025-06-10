@@ -133,19 +133,18 @@ alias pulse='cd ~/workspace/pulse && activate'
 alias devops='cd ~/workspace/pulse && activate devops'
 
 # backend
-alias make-pulse-venv='uv venv --prompt venv'
+alias make-pulse-venv='uv venv --prompt pulse .venv'
 alias make-devops-venv='uv venv --prompt devops .venv-devops'
 
-alias pulse-install-py='env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
-alias pulse-install='pulse && pulse-install && uv pip install ~/requirements.nvim-extras.txt'
-alias pulse-reset-py='pulse && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install && pulse-install'
+alias pulse-install-py='activate && env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
+alias pulse-reset-py='activate && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install && pulse-install-py'
 
-alias devops-install='devops && uv pip install -r scripts/devops/requirements.txt'
-alias devops-reset-py='pulse-devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
+alias devops-install='activate devops && uv pip install -r scripts/devops/requirements.txt'
+alias devops-reset-py='activate devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
 
 # frontend
-alias pulse-install-npm="pulse && npm ci"
-alias pulse-reset-npm="pulse && rm -rf node_modules && pulse-install-npm"
+alias pulse-install-npm="npm ci"
+alias pulse-reset-npm="rm -rf node_modules && pulse-install-npm"
 
 alias pulse-install='pulse-install-py && pulse-install-npm'
 alias pulse-reset='pulse-reset-py && pulse-reset-npm'

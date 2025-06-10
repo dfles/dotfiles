@@ -50,6 +50,20 @@ local debug_configs = {
 }
 
 return {
+  -- LSP
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        basedpyright = {
+          -- Disable publishing diagnostics
+          handlers = {
+            ["textDocument/publishDiagnostics"] = function() end,
+          },
+        },
+      },
+    },
+  },
   -- Linting
   {
     "mfussenegger/nvim-lint",
@@ -100,7 +114,7 @@ return {
     "stevearc/conform.nvim",
     opts = {
       formatters_by_ft = {
-        python = { "ruff" },
+        python = { "ruff_fix", "ruff_format" },
         toml = { "taplo" },
       },
     },

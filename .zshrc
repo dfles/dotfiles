@@ -76,6 +76,8 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+source <(fzf --zsh)
+
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -169,5 +171,9 @@ alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid 
 
 # misc stuff
 alias stime='/usr/bin/time -l -h -p'
-alias django-pid='lsof -n -i :8000'
+
+pidof() {
+  lsof -n -i :$1
+}
+
 alias tcurl="curl -kv -w '\n* Response time: %{time_total}s\n'"

@@ -105,7 +105,7 @@ source <(fzf --zsh)
 export HISTTIMEFORMAT="%Y-%m-%d %T "
 
 ## ALIASES
-# some git stuff
+# Some git stuff
 alias glog='git log --oneline'
 alias gl='glog'
 alias gs='glog --stat'
@@ -113,60 +113,18 @@ alias g='git status'
 alias gd='git diff'
 alias gg="git for-each-ref --color=always --sort=-committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' | less -iXFR"
 
-# backend stuff
-alias django-env='env $(cat .env | xargs)'
-alias django='django-env python ./backend/manage.py'
-alias django-time='stime env $(cat .env | xargs) python ./backend/manage.py'
-
-# environment helpers
 # Activate Python virtual envs as "activate", "activate devops"
 activate_venv() {
     venv_dir=".venv"
     if [[ -n "$1" ]]; then
         venv_dir="$venv_dir-$1"
     fi
-    
-    source $venv_dir/bin/activate    
+
+    source $venv_dir/bin/activate
 }
 
 alias activate='activate_venv'
 
-alias pulse='cd ~/workspace/pulse && activate'
-alias devops='cd ~/workspace/pulse && activate devops'
-
-# backend
-alias make-pulse-venv='uv venv --prompt pulse .venv'
-alias make-devops-venv='uv venv --prompt devops .venv-devops'
-
-alias pulse-install-py='activate && env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
-alias pulse-reset-py='activate && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install-py'
-
-alias devops-install='activate devops && uv pip install -r scripts/devops/requirements.txt'
-alias devops-reset-py='activate devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
-
-# frontend
-alias pulse-install-npm="npm ci"
-alias pulse-reset-npm="rm -rf node_modules && pulse-install-npm"
-
-alias pulse-install='pulse-install-py && pulse-install-npm'
-alias pulse-reset='pulse-reset-py && pulse-reset-npm'
-
-# service
-alias redis-start='brew services start redis'
-alias redis-stop='brew services stop redis'
-
-# local app
-alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'
-alias django-test='django test -n --noinput'
-alias vite-start='pulse && honcho start vite'
-alias maildev-start='pulse && honcho -f ./tools/Procfile start maildev'
-alias celery-worker-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile start worker'
-alias celery-flower-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile start flower'
-alias storybook-start='pulse && npm run start-storybook'
-alias add-test-plan='./bin/add-test-plan'
-alias refresh-deps='pip-install && npm ci'
-
-# fix stuff
 alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid & brew services restart postgresql@14'
 
 # misc stuff
@@ -177,3 +135,6 @@ pidof() {
 }
 
 alias tcurl="curl -kv -w '\n* Response time: %{time_total}s\n'"
+
+# KickUp specific aliases
+source ~/.zshrc-kickup

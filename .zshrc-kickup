@@ -1,0 +1,39 @@
+# Backend stuff
+alias django-env='env $(cat .env | xargs)'
+alias django='django-env python ./backend/manage.py'
+alias django-time='stime env $(cat .env | xargs) python ./backend/manage.py'
+
+alias pulse='cd ~/workspace/pulse && activate'
+alias devops='cd ~/workspace/pulse && activate devops'
+
+# Backend
+alias make-pulse-venv='uv venv --prompt pulse .venv'
+alias make-devops-venv='uv venv --prompt devops .venv-devops'
+
+alias pulse-install-py='activate && env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
+alias pulse-reset-py='activate && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install-py'
+
+alias devops-install='activate devops && uv pip install -r scripts/devops/requirements.txt'
+alias devops-reset-py='activate devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'
+
+# Frontend
+alias pulse-install-npm="npm ci"
+alias pulse-reset-npm="rm -rf node_modules && pulse-install-npm"
+
+alias pulse-install='pulse-install-py && pulse-install-npm'
+alias pulse-reset='pulse-reset-py && pulse-reset-npm'
+
+# Service
+alias redis-start='brew services start redis'
+alias redis-stop='brew services stop redis'
+
+# Local app
+alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'
+alias django-test='django test -n --noinput'
+alias vite-start='pulse && honcho start vite'
+alias maildev-start='pulse && honcho -f ./tools/Procfile start maildev'
+alias celery-worker-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile start worker'
+alias celery-flower-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile start flower'
+alias storybook-start='pulse && npm run start-storybook'
+alias add-test-plan='./bin/add-test-plan'
+alias refresh-deps='pip-install && npm ci'

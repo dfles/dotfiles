@@ -139,7 +139,7 @@ alias make-pulse-venv='uv venv --prompt pulse .venv'
 alias make-devops-venv='uv venv --prompt devops .venv-devops'
 
 alias pulse-install-py='activate && env | grep VIRTUAL_ENV &&  LDFLAGS=`pg_config --ldflags` CPPFLAGS=`pg_config --cppflags` uv pip install --compile --no-cache-dir -r backend/requirements.dev.txt || echo "No virtual env detected"'
-alias pulse-reset-py='activate && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install && pulse-install-py'
+alias pulse-reset-py='activate && rm -rf $VIRTUAL_ENV && deactivate && make-pulse-venv && pulse-install-py'
 
 alias devops-install='activate devops && uv pip install -r scripts/devops/requirements.txt'
 alias devops-reset-py='activate devops && rm -rf $VIRTUAL_ENV && deactivate && make-devops-venv && activate devops && devops-install'

@@ -136,5 +136,5 @@ pidof() {
 
 alias tcurl="curl -kv -w '\n* Response time: %{time_total}s\n'"
 
-# KickUp specific aliases
-source ~/.zshrc-kickup
+# Workspace specific aliases
+source ~/.zshrc-workspace

@@ -136,5 +136,8 @@ pidof() {
 
 alias tcurl="curl -kv -w '\n* Response time: %{time_total}s\n'"
 
-# Workspace specific aliases
-source ~/.zshrc-workspace
+if [ -f ~/.zshrc-workspace ]; then
+  # Load workspace specific aliases if the file exists
+  echo "Loading workspace specific aliases from ~/.zshrc-workspace"
+  source ~/.zshrc-workspace
+fi

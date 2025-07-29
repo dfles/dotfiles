@@ -20,6 +20,21 @@ local function load_env_file(filepath)
   return env
 end
 
+local function get_path_root(modulepath)
+  local first_part = modulepath:match("^([^.]+)")
+  return first_part
+end
+
+local function file_exists(filename)
+  local file = io.open(filename, "r") -- Attempt to open the file in read mode
+  if file then
+    file:close() -- Close the file if it was successfully opened
+    return true
+  else
+    return false
+  end
+end
+
 local debug_configs = {
   {
     type = "python",
@@ -40,7 +55,22 @@ local debug_configs = {
         error("No test path provided")
       end
 
-      return { "test", "--noinput", "--nomigrations", "--exclude-tag=aft", test_path }
+      -- Check if there's a testsettings file we should include
+      local args = { "test", "--noinput", "--nomigrations", "--exclude-tag=aft" }
+
+      if guessed_path and guessed_path ~= "" then
+        local app_root = get_path_root(guessed_path)
+        local maybe_test_settings_file = "backend/" .. app_root .. "/test/testsettings.py"
+
+        if file_exists(maybe_test_settings_file) then
+          local test_settings = "--settings=" .. app_root .. ".test.testsettings"
+          table.insert(args, test_settings)
+          print("Using test settings: " .. test_settings)
+        end
+      end
+
+      table.insert(args, test_path)
+      return args
     end,
     django = true,
     justMyCode = false,
@@ -139,7 +169,7 @@ return {
       vim.keymap.set("n", "<F5>", dap.continue)
       vim.keymap.set("n", "<F10>", dap.step_over)
       vim.keymap.set("n", "<F11>", dap.step_into)
-      vim.keymap.set("n", "<c+F11>", dap.step_out)
+      vim.keymap.set("n", "<C-F11>", dap.step_out)
       vim.keymap.set("n", "<F12>", dap.step_out)
       vim.keymap.set("n", "<Leader>db", dap.toggle_breakpoint, { desc = "Toggle breakpoint" })
       vim.keymap.set("n", "<Leader>dB", function()

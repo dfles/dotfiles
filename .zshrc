@@ -77,6 +77,7 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 
 source <(fzf --zsh)
+bindkey -v
 
 # export MANPATH="/usr/local/man:$MANPATH"
 

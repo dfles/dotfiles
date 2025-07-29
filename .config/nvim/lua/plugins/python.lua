@@ -59,13 +59,23 @@ local debug_configs = {
       local args = { "test", "--noinput", "--nomigrations", "--exclude-tag=aft" }
 
       if guessed_path and guessed_path ~= "" then
-        local app_root = get_path_root(guessed_path)
-        local maybe_test_settings_file = "backend/" .. app_root .. "/test/testsettings.py"
+        -- First, check for local testsettings (same directory as test file)
+        local current_dir = vim.fn.expand("%:p:h"):match("backend/(.+)")
+        local local_test_settings_file = "backend/" .. current_dir .. "/test/testsettings.py"
 
-        if file_exists(maybe_test_settings_file) then
+        -- Then, check for app-level testsettings
+        local app_root = get_path_root(guessed_path)
+        local app_test_settings_file = "backend/" .. app_root .. "/test/testsettings.py"
+
+        -- Prefer local testsettings over app-level testsettings
+        if file_exists(local_test_settings_file) then
+          local test_settings = "--settings=" .. current_dir:gsub("/", ".") .. ".test.testsettings"
+          table.insert(args, test_settings)
+          print("Using local test settings: " .. test_settings)
+        elseif file_exists(app_test_settings_file) then
           local test_settings = "--settings=" .. app_root .. ".test.testsettings"
           table.insert(args, test_settings)
-          print("Using test settings: " .. test_settings)
+          print("Using app-level test settings: " .. test_settings)
         end
       end
 

@@ -1,4 +1,4 @@
-local venv = os.getenv("VIRTUAL_ENV")
+local venv = os.getenv("VIRTUAL_ENV") or ""
 
 local function load_env_file(filepath)
   local env = {}
@@ -132,7 +132,7 @@ return {
       local dapui = require("dapui")
 
       dapui.setup()
-      require("dap-python").setup(os.getenv("VIRTUAL_ENV") .. "/bin/python")
+      require("dap-python").setup(venv .. "/bin/python")
       dap.configurations.python = debug_configs
 
       -- Optional keymaps

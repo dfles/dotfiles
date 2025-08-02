@@ -1,0 +1,11 @@
+path+=/opt/homebrew/opt/postgresql@14
+path+=/opt/homebrew/bin
+path+=~/workspace/libs
+path+=~/.local/share/bob/nvim-bin
+
+# Exports for installing python deps
+export LDFLAGS=`pg_config --ldflags`
+export CPPFLAGS=`pg_config --cppflags`
+
+export NODE_OPTIONS="--max-old-space-size=4096"
+

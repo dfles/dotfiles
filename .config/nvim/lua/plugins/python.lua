@@ -100,6 +100,22 @@ return {
           handlers = {
             ["textDocument/publishDiagnostics"] = function() end,
           },
+          settings = {
+            basedpyright = {
+              analysis = {
+                exclude = {
+                  "**/frontend",
+                  "**/node_modules",
+                  "**/.ruff_cache",
+                  "**/.mypy_cache",
+                  "**/.pytest_cache",
+                  "**/dist",
+                  "**/build",
+                  "**/__pycache__",
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -179,7 +195,6 @@ return {
       vim.keymap.set("n", "<F5>", dap.continue)
       vim.keymap.set("n", "<F10>", dap.step_over)
       vim.keymap.set("n", "<F11>", dap.step_into)
-      vim.keymap.set("n", "<C-F11>", dap.step_out)
       vim.keymap.set("n", "<F12>", dap.step_out)
       vim.keymap.set("n", "<Leader>db", dap.toggle_breakpoint, { desc = "Toggle breakpoint" })
       vim.keymap.set("n", "<Leader>dB", function()

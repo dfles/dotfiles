@@ -112,7 +112,9 @@ alias gl='glog'
 alias gs='glog --stat'
 alias g='git status'
 alias gd='git diff'
-alias gg="git for-each-ref --color=always --sort=-committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' | less -iXFR"
+
+alias gga="git for-each-ref --color=always --sort=-committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' | less -iXFR"
+alias gg="gga | head -n 10"
 
 # Activate Python virtual envs as "activate", "activate devops"
 activate_venv() {

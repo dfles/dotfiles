@@ -26,6 +26,7 @@ alias pulse-reset='pulse-reset-py && pulse-reset-npm'
 # Service
 alias redis-start='brew services start redis'
 alias redis-stop='brew services stop redis'
+alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid & brew services restart postgresql@14'
 
 # Local app
 alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'

@@ -1,5 +1,4 @@
 return {
-  { "EdenEast/nightfox.nvim", lazy = false, priority = 1000 },
   {
     "zenbones-theme/zenbones.nvim",
     dependencies = "rktjmp/lush.nvim",

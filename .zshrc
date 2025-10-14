@@ -73,3 +73,6 @@ if [ -f ~/.zshrc-workspace ]; then
   echo "Loading workspace specific aliases from ~/.zshrc-workspace"
   source ~/.zshrc-workspace
 fi
+
+# Temp alias since I still need to work while rebuilding my config
+alias lnvim='NVIM_APPNAME=lnvim nvim'

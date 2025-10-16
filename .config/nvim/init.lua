@@ -38,6 +38,7 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic quickfix list" })
+vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show diagnostic" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Buffers
@@ -76,7 +77,10 @@ rtp:prepend(lazypath)
 
 -- [[ Configure and install plugins ]]
 require("lazy").setup({
-  "NMAC427/guess-indent.nvim", -- Detect tabstop and shiftwidth automatically
+  {
+    "NMAC427/guess-indent.nvim", -- Detect tabstop and shiftwidth automatically
+    opts = {},
+  },
   { -- Useful plugin to show pending keybinds.
     "folke/which-key.nvim",
     event = "VimEnter", -- Sets the loading event to 'VimEnter'
@@ -254,7 +258,12 @@ require("lazy").setup({
       -- See :help vim.diagnostic.Opts
       vim.diagnostic.config({
         severity_sort = true,
-        float = { border = "rounded", source = "if_many" },
+        float = {
+          border = "rounded",
+          source = function(diag)
+            return diag.source and ("[" .. diag.source .. "]") or nil
+          end,
+        },
         underline = { severity = vim.diagnostic.severity.ERROR },
         signs = vim.g.have_nerd_font and {
           text = {
@@ -265,16 +274,10 @@ require("lazy").setup({
           },
         } or {},
         virtual_text = {
-          source = "if_many",
           spacing = 2,
           format = function(diagnostic)
-            local diagnostic_message = {
-              [vim.diagnostic.severity.ERROR] = diagnostic.message,
-              [vim.diagnostic.severity.WARN] = diagnostic.message,
-              [vim.diagnostic.severity.INFO] = diagnostic.message,
-              [vim.diagnostic.severity.HINT] = diagnostic.message,
-            }
-            return diagnostic_message[diagnostic.severity]
+            local source = diagnostic.source and ("[" .. diagnostic.source .. "] ") or ""
+            return source .. diagnostic.message
           end,
         },
       })
@@ -572,7 +575,7 @@ require("lazy").setup({
       indent = { enable = true },
     },
   },
-  -- { import = "plugins" },
+  { import = "plugins" },
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`

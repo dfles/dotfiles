@@ -90,42 +90,6 @@ local debug_configs = {
 }
 
 return {
-  -- LSP
-  {
-    "neovim/nvim-lspconfig",
-    opts = {
-      servers = {
-        basedpyright = {
-          settings = {
-            basedpyright = {
-              analysis = {
-                typeCheckingMode = "off",
-                diagnosticMode = "openFilesOnly",
-                useLibraryCodeForTypes = true,
-                autoSearchPaths = true,
-                autoImportCompletions = true,
-                exclude = {
-                  "**/frontend",
-                  "**/node_modules",
-                  "**/.ruff_cache",
-                  "**/.mypy_cache",
-                  "**/.pytest_cache",
-                  "**/dist",
-                  "**/build",
-                  "**/__pycache__",
-                },
-              },
-            },
-          },
-          on_attach = function(client, bufnr)
-            -- Disable basedpyright diagnostics completely
-            -- We use mypy via nvim-lint instead for type checking
-            client.server_capabilities.diagnosticProvider = nil
-          end,
-        },
-      },
-    },
-  },
   -- Linting
   {
     "mfussenegger/nvim-lint",

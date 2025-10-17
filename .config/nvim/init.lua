@@ -558,7 +558,10 @@ require("lazy").setup({
       indent = { enable = true },
     },
   },
-  { import = "plugins" },
+  { import = "aerial" },
+  { import = "git" },
+  { import = "markdown" },
+  { import = "python" },
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`

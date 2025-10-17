@@ -23,6 +23,7 @@ rtp:prepend(lazypath)
 
 require("lazy").setup({
   { "NMAC427/guess-indent.nvim", opts = {} },
+  { "windwp/nvim-autopairs", opts = {} },
   { -- Highlight todo, notes, etc in comments
     "folke/todo-comments.nvim",
     event = "VimEnter",

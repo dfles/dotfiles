@@ -7,7 +7,6 @@ return {
       -- Top-level groupings
       spec = {
         { "<leader>f", group = "find" },
-        { "<leader>u", group = "ui" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>g", group = "git" },

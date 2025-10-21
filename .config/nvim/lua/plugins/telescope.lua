@@ -29,16 +29,13 @@ return {
 
       -- See `:help telescope.builtin`
       local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>h", builtin.help_tags, { desc = "Help" })
-      vim.keymap.set("n", "<leader>k", builtin.keymaps, { desc = "Keymaps" })
+      -- Files/buffers
       vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
-      vim.keymap.set("n", "<leader>fs", builtin.builtin, { desc = "Search select Telescope" })
-      vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "Search current word" })
-      vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live grep" })
-      vim.keymap.set("n", "<leader>fd", builtin.diagnostics, { desc = "Diagnostics" })
-      vim.keymap.set("n", "<leader>fR", builtin.resume, { desc = "Resume search" })
       vim.keymap.set("n", "<leader>fr", builtin.oldfiles, { desc = "Recent files" })
       vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "Open buffers" })
+      vim.keymap.set("n", "<leader>fn", function()
+        builtin.find_files({ cwd = vim.fn.stdpath("config") })
+      end, { desc = "nvim files" })
 
       vim.keymap.set("n", "<leader>/", function()
         builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
@@ -54,9 +51,14 @@ return {
         })
       end, { desc = "Search in open files" })
 
-      vim.keymap.set("n", "<leader>fn", function()
-        builtin.find_files({ cwd = vim.fn.stdpath("config") })
-      end, { desc = "Search neovim files" })
+      -- Search
+      vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "Help" })
+      vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "Keymaps" })
+      vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "Search select Telescope" })
+      vim.keymap.set("n", "<leader>sw", builtin.grep_string, { desc = "Search current word" })
+      vim.keymap.set("n", "<leader>s/", builtin.live_grep, { desc = "Live grep" })
+      vim.keymap.set("n", "<leader>sd", builtin.diagnostics, { desc = "Diagnostics" })
+      vim.keymap.set("n", "<leader>sR", builtin.resume, { desc = "Resume search" })
     end,
   },
 }

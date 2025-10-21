@@ -6,7 +6,8 @@ return {
       preset = "helix",
       -- Top-level groupings
       spec = {
-        { "<leader>f", group = "find" },
+        { "<leader>f", group = "files" },
+        { "<leader>s", group = "search" },
         { "<leader>b", group = "buffer" },
         { "<leader>c", group = "code" },
         { "<leader>g", group = "git" },

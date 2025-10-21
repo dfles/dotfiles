@@ -128,6 +128,7 @@ return {
           settings = {
             basedpyright = {
               analysis = {
+                extraPaths = { "./backend", "./src" },
                 exclude = {
                   "**/frontend",
                   "**/node_modules",

@@ -12,7 +12,7 @@ return {
   -- Markdown preview
   {
     "iamcco/markdown-preview.nvim",
-    ft = "markdown",
+    ft = { "markdown", "norg", "rmd", "org", "codecompanion" },
     cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
     build = function()
       require("lazy").load({ plugins = { "markdown-preview.nvim" } })

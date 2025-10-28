@@ -86,6 +86,18 @@ require("lazy").setup({
       indent = { enable = true },
     },
   },
+  -- Zen(ish) mode with note taking in the gutters
+  {
+    "shortcuts/no-neck-pain.nvim",
+    version = "*",
+    opts = {
+      width = 150,
+    },
+    keys = {
+      { "<leader>z", "<cmd>NoNeckPain<cr>", desc = "Toggle centered window" },
+    },
+  },
+  -- Additional, more involved plugin config
   { import = "plugins" },
 })
 

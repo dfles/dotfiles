@@ -144,6 +144,12 @@ return {
           },
         },
         vtsls = {},
+        eslint = {
+          settings = {
+            workingDirectories = { mode = "auto" },
+            format = false, -- Let conform handle formatting
+          },
+        },
         prettier = {},
         terraformls = {},
         sqlfmt = {},

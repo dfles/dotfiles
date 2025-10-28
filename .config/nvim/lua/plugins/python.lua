@@ -137,6 +137,19 @@ return {
           return diagnostics
         end,
       }
+
+      -- Configure ruff to use venv
+      lint.linters.ruff.cmd = function()
+        return venv and (venv .. "/bin/ruff") or "ruff"
+      end
+
+      -- Create autocommand to trigger linting
+      vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
+        group = vim.api.nvim_create_augroup("nvim-lint", { clear = true }),
+        callback = function()
+          lint.try_lint()
+        end,
+      })
     end,
   },
   -- Debugging

@@ -85,6 +85,15 @@ require("lazy").setup({
       highlight = { enable = true },
       indent = { enable = true },
     },
+    config = function(_, opts)
+      require("nvim-treesitter.configs").setup(opts)
+
+      -- Folding
+      vim.opt.foldmethod = "expr"
+      vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+      vim.opt.foldlevel = 99
+      vim.opt.foldlevelstart = 99
+    end,
   },
   -- Zen(ish) mode with note taking in the gutters
   {

@@ -18,6 +18,18 @@ return {
       --  Insert mode: <c-/>
       --  Normal mode: ?
       require("telescope").setup({
+        defaults = {
+          mappings = {
+            i = {
+              ["<C-s>"] = "select_vertical",
+              ["<C-h>"] = "select_horizontal",
+            },
+            n = {
+              ["<C-s>"] = "select_vertical",
+              ["<C-h>"] = "select_horizontal",
+            },
+          },
+        },
         extensions = {
           ["ui-select"] = {
             require("telescope.themes").get_dropdown(),

@@ -30,6 +30,26 @@ require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = { signs = false },
   },
+  {
+    "stevearc/oil.nvim",
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {
+      float = {
+        max_width = 120,
+        max_height = 30,
+      },
+      keymaps = {
+        ["<Esc><Esc>"] = "actions.close",
+      },
+    },
+    dependencies = { { "nvim-mini/mini.icons", opts = {} } },
+    keys = {
+      { "<leader>E", "<cmd>Oil<cr>", desc = "Explorer (buffer)" },
+      { "<leader>e", "<cmd>Oil --float<cr>", desc = "Explorer (float)" },
+    },
+    lazy = false,
+  },
   { -- Collection of various small independent plugins/modules
     "echasnovski/mini.nvim",
     config = function()

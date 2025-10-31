@@ -1,6 +1,11 @@
 theme = Kanagawabones
+
 font-size = 20
 font-family = JetBrainsMono Nerd Font Mono
+font-feature = -calt
+font-feature = -liga
+font-feature = -dlig
+font-feature = -clig
 
 keybind = global:cmd+backquote=toggle_quick_terminal
 

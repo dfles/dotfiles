@@ -55,12 +55,12 @@ return {
         local m = require("render-markdown")
         if require("render-markdown.state").enabled then
           m.disable()
-          vim.notify("Render Markdown disabled")
+          vim.notify("Render markdown disabled")
         else
           m.enable()
-          vim.notify("Render Markdown enabled")
+          vim.notify("Render markdown enabled")
         end
-      end, { desc = "Toggle Render Markdown" })
+      end, { desc = "Toggle render Markdown" })
     end,
   },
 }

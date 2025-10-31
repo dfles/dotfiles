@@ -1,5 +1,3 @@
-local venv = os.getenv("VIRTUAL_ENV")
-
 local function load_env_file(filepath)
   local env = {}
   local file = io.open(filepath, "r")
@@ -90,69 +88,6 @@ local debug_configs = {
 }
 
 return {
-  -- Linting
-  {
-    "mfussenegger/nvim-lint",
-    opts = {
-      linters_by_ft = {
-        python = { "ruff", "mypy" },
-      },
-    },
-    config = function(_, opts)
-      local lint = require("lint")
-
-      -- Set up linters by filetype
-      lint.linters_by_ft = opts.linters_by_ft
-
-      -- Configure custom mypy linter using dmypy
-      lint.linters.mypy = {
-        cmd = function()
-          return venv and (venv .. "/bin/dmypy") or "dmypy"
-        end,
-        args = {
-          "check",
-          "--",
-          function()
-            return vim.fn.expand("%:p")
-          end,
-        },
-        ignore_exitcode = true,
-        stdin = false,
-        parser = function(output, bufnr)
-          local diagnostics = {}
-          for line in vim.gsplit(output, "\n", { trimempty = true }) do
-            local path, row, col, msg = line:match("^(.-):(%d+):(%d+): (.+)$")
-            if path and row and col and msg then
-              table.insert(diagnostics, {
-                lnum = tonumber(row) - 1,
-                col = tonumber(col) - 1,
-                end_lnum = tonumber(row) - 1,
-                end_col = tonumber(col),
-                severity = vim.diagnostic.severity.WARN,
-                source = "dmypy",
-                message = msg,
-              })
-            end
-          end
-          return diagnostics
-        end,
-      }
-
-      -- Configure ruff to use venv
-      lint.linters.ruff.cmd = function()
-        return venv and (venv .. "/bin/ruff") or "ruff"
-      end
-
-      -- Create autocommand to trigger linting
-      vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
-        group = vim.api.nvim_create_augroup("nvim-lint", { clear = true }),
-        callback = function()
-          lint.try_lint()
-        end,
-      })
-    end,
-  },
-  -- Debugging
   {
     "mfussenegger/nvim-dap",
     dependencies = {

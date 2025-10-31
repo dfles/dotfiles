@@ -13,6 +13,7 @@ rtp:prepend(lazypath)
 
 require("options")
 require("lazy").setup({ { import = "plugins" } })
+require("lsp")
 require("keymaps")
 require("autocmd")
 

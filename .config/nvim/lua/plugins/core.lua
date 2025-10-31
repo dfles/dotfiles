@@ -1,5 +1,15 @@
 -- Smaller, essential configs that I'm too lazy to break out into individual files
 return {
+  { -- Used for completion, annotations and signatures of Neovim apis
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        -- Load luvit types when the `vim.uv` word is found
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+      },
+    },
+  },
   { "NMAC427/guess-indent.nvim", opts = {} },
   { "windwp/nvim-autopairs", opts = {} },
   { -- Highlight todo, notes, etc in comments

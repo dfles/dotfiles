@@ -1,13 +1,10 @@
+---@type vim.lsp.Config
 return {
   cmd = { "basedpyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {
     "pyproject.toml",
-    "setup.py",
-    "setup.cfg",
     "requirements.txt",
-    "Pipfile",
-    "pyrightconfig.json",
     ".git",
   },
   single_file_support = true,
@@ -17,7 +14,10 @@ return {
   settings = {
     basedpyright = {
       analysis = {
-        extraPaths = { "./backend", "./src" },
+        autoSearchPaths = true,
+        useLibraryCodeForTypes = true,
+        diagnosticMode = "openFilesOnly",
+        extraPaths = { "./backend" },
         exclude = {
           "**/frontend",
           "**/node_modules",
@@ -27,7 +27,11 @@ return {
           "**/dist",
           "**/build",
           "**/__pycache__",
+          "**/.venv",
+          "**/venv",
+          "**/.git",
         },
+        ignore = { "*" }, -- Only analyze open files
       },
     },
   },

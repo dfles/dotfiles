@@ -22,11 +22,11 @@ return {
           mappings = {
             i = {
               ["<C-s>"] = "select_vertical",
-              ["<C-h>"] = "select_horizontal",
+              ["<C-h>"] = false, -- Maintain <C-h> for deleting prev char. I don't use hsplits often.
             },
             n = {
               ["<C-s>"] = "select_vertical",
-              ["<C-h>"] = "select_horizontal",
+              ["<C-h>"] = false,
             },
           },
         },

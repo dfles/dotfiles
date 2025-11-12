@@ -49,7 +49,7 @@ return {
       width = 150,
     },
     keys = {
-      { "<leader>z", "<cmd>NoNeckPain<cr>", desc = "Toggle centered window" },
+      { "<leader>uz", "<cmd>NoNeckPain<cr>", desc = "Toggle centered window" },
     },
   },
 }

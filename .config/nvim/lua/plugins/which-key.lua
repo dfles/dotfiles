@@ -12,6 +12,7 @@ return {
         { "<leader>c", group = "code" },
         { "<leader>g", group = "git" },
         { "<leader>d", group = "debug" },
+        { "<leader>u", group = "ui" },
       },
     },
     keys = {

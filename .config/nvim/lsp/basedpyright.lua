@@ -26,6 +26,11 @@ return {
         useLibraryCodeForTypes = true,
         diagnosticMode = "openFilesOnly",
         extraPaths = { "./backend" },
+        inlayHints = {
+          variableTypes = true,
+          functionReturnTypes = true,
+          parameterTypes = true,
+        },
         exclude = {
           "**/frontend",
           "**/node_modules",

@@ -4,7 +4,6 @@ for _, mode in ipairs({ "n", "v", "i" }) do
   vim.keymap.set(mode, "<Down>", "<Nop>", { noremap = true, silent = true })
   vim.keymap.set(mode, "<Left>", "<Nop>", { noremap = true, silent = true })
   vim.keymap.set(mode, "<Right>", "<Nop>", { noremap = true, silent = true })
-  vim.keymap.set(mode, "<BS>", "<Nop>", { noremap = true, silent = true })
 end
 
 vim.keymap.set("n", "<leader>bo", "<cmd>%bd|e#<CR>", { desc = "Close other buffers" })
@@ -16,7 +15,12 @@ vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right win
 vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
-vim.keymap.set("n", "<leader>td", function()
+vim.keymap.set("n", "<leader>ud", function()
   local bufnr = vim.api.nvim_get_current_buf()
   vim.diagnostic.enable(not vim.diagnostic.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 end, { desc = "Toggle diagnostics" })
+
+vim.keymap.set("n", "<leader>uh", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+end, { desc = "Toggle inlay hints" })

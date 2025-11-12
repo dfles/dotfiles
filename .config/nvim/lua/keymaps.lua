@@ -7,8 +7,8 @@ for _, mode in ipairs({ "n", "v", "i" }) do
 end
 
 -- Path yanking
-vim.keymap.set("n", "<leader>yp", ":let @+=expand('%:.')<cr>", { desc = "Copy relative path" })
-vim.keymap.set("n", "<leader>yP", ":let @+=@%<cr>", { desc = "Copy absolute path" })
+vim.keymap.set("n", "<leader>by", ":let @+=expand('%:.')<cr>", { desc = "Yank relative path" })
+vim.keymap.set("n", "<leader>bY", ":let @+=@%<cr>", { desc = "Yank absolute path" })
 
 vim.keymap.set("n", "<leader>bo", "<cmd>%bd|e#<cr>", { desc = "Close other buffers" })
 -- Delete current buffer without closing window
@@ -28,3 +28,8 @@ vim.keymap.set("n", "<leader>uh", function()
   local bufnr = vim.api.nvim_get_current_buf()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 end, { desc = "Toggle inlay hints" })
+
+-- Toggle relativenumber to make referencing line numbers while pairing simpler.
+vim.keymap.set("n", "<leader>un", function()
+  vim.o.relativenumber = not vim.o.relativenumber
+end, { desc = "Toggle relative line numbers" })

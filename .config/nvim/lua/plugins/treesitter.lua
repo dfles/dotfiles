@@ -40,4 +40,15 @@ return {
       vim.opt.foldlevelstart = 99
     end,
   },
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    event = "BufReadPost",
+    opts = {
+      mode = "cursor",
+      max_lines = 3,
+    },
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+    },
+  },
 }

@@ -37,6 +37,7 @@ source $ZSH/oh-my-zsh.sh
 source <(fzf --zsh)
 
 export EDITOR="nvim"
+export VI_MODE_SET_CURSOR=true
 export HISTTIMEFORMAT="%Y-%m-%d %T "
 
 # Some git stuff

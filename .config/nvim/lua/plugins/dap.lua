@@ -23,6 +23,10 @@ return {
       vim.keymap.set("n", "<Leader>dr", dap.restart, { desc = "Restart" })
 
       vim.keymap.set("n", "<Leader>dt", dap.terminate, { desc = "Stop debugging" })
+      vim.keymap.set("n", "<Leader>du", dapui.toggle, { desc = "Toggle DAP UI" })
+      vim.keymap.set("n", "<Leader>dR", function()
+        dapui.open({ reset = true })
+      end, { desc = "Reset DAP UI layout" })
 
       -- Auto open/close UI
       dap.listeners.after.event_initialized["dapui_config"] = function()

@@ -15,8 +15,6 @@ return {
         ensure_installed = {
           "lua-language-server",
           "basedpyright",
-          "ty",
-          "pyrefly",
           "vtsls",
           "eslint-lsp",
           "terraform-ls",

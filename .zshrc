@@ -41,9 +41,8 @@ export VI_MODE_SET_CURSOR=true
 export HISTTIMEFORMAT="%Y-%m-%d %T "
 
 # Some git stuff
-alias glog='git log --oneline'
-alias gl='glog'
-alias gs='glog --stat'
+alias gl='git log --oneline --color=always | head -n 10'
+alias gs='git log --oneline --stat'
 alias g='git status'
 alias gd='git diff'
 

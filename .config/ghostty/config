@@ -7,5 +7,9 @@ font-feature = -liga
 font-feature = -dlig
 font-feature = -clig
 
-keybind = global:cmd+backquote=toggle_quick_terminal
+keybind = global:cmd+escape=toggle_quick_terminal
 
+# Disable tabs in favor of tmux
+window-decoration = false
+gtk-tabs-location = hidden
+keybind = super+t=unbind

@@ -37,6 +37,11 @@ return {
       statusline.setup({ use_icons = true })
 
       ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_git = function()
+        return ""
+      end
+
+      ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
         return "%2l:%-2v"
       end

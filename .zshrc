@@ -41,7 +41,8 @@ export VI_MODE_SET_CURSOR=true
 export HISTTIMEFORMAT="%Y-%m-%d %T "
 
 # Some git stuff
-alias gl='git log --oneline --color=always | head -n 10'
+alias gla='git log --oneline --color=always'
+alias gl='gla | head -n 10'
 alias gs='git log --oneline --stat'
 alias g='git status'
 alias gd='git diff'
@@ -59,6 +60,7 @@ activate_venv() {
     source $venv_dir/bin/activate
 }
 
+alias gbname='git rev-parse --abbrev-ref HEAD'
 alias activate='activate_venv'
 
 portpid() {
@@ -74,5 +76,3 @@ if [ -f ~/.zshrc-workspace ]; then
   source ~/.zshrc-workspace
 fi
 
-# Temp alias since I still need to work while rebuilding my config
-alias lnvim='NVIM_APPNAME=lnvim nvim'

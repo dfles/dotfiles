@@ -32,7 +32,7 @@ alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid 
 # Local app
 alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'
 alias django-test='django test -n --noinput'
-alias django-db-reset='dropdb working && createdb -T main working && django migrate'
+alias django-db-reset='dropdb working && createdb -T main working && django-migrate'
 alias vite-start='pulse && honcho start vite'
 alias maildev-start='pulse && honcho -f ./tools/Procfile start maildev'
 alias celery-worker-start='pulse && PYTHONUNBUFFERED=1 honcho -f Procfile start worker'
@@ -46,11 +46,11 @@ with-escalated() {
   local role_arn=$AWS_ESCALATION_ROLE_ARN
   local session_name="temp-escalated-$(date +%s)"
 
-  echo "🔄 Getting temporary escalated credentials..."
+  echo "Getting temporary escalated credentials..."
   local creds=$(aws sts assume-role --role-arn "$role_arn" --role-session-name "$session_name" --output json 2>/dev/null)
 
   if [ $? -eq 0 ]; then
-      echo "✅ Running command with escalated permissions: $@"
+      echo "Running command with escalated permissions: $@"
       (
           export AWS_ACCESS_KEY_ID=$(echo "$creds" | jq -r '.Credentials.AccessKeyId')
           export AWS_SECRET_ACCESS_KEY=$(echo "$creds" | jq -r '.Credentials.SecretAccessKey')
@@ -58,7 +58,7 @@ with-escalated() {
           "$@"
       )
   else
-      echo "❌ Failed to assume escalated role"
+      echo "Failed to assume escalated role"
       return 1
   fi
   }

@@ -1,0 +1,16 @@
+[alias]
+	yeet = push --force-with-lease
+	append = commit --amend --no-edit
+	fixup = commit --fixup
+[core]
+	editor = nvim
+	pager = less -iXFR
+[push]
+	default = upstream
+	autoSetupRemote = true
+[pull]
+	rebase = true
+[rebase]
+	autosquash = true
+[include]
+	path = ~/.gitconfig.local

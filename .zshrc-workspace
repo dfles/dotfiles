@@ -1,8 +1,3 @@
-# Backend stuff
-alias django-env='env $(cat .env | xargs)'
-alias django='django-env python ./backend/manage.py'
-alias django-time='stime env $(cat .env | xargs) python ./backend/manage.py'
-
 alias pulse='cd ~/workspace/pulse && activate'
 alias devops='cd ~/workspace/pulse && activate devops'
 
@@ -30,6 +25,8 @@ alias redis-flush='redis-cli flushdb && redis-cli flushall'
 alias postgres-cleanup='sudo rm /opt/homebrew/var/postgresql\@14/postmaster.pid & brew services restart postgresql@14'
 
 # Local app
+alias django='env $(cat .env | xargs) python ./backend/manage.py'
+alias django-time='stime env $(cat .env | xargs) python ./backend/manage.py'
 alias django-start='pulse && PYTHONUNBUFFERED=1 honcho start django'
 alias django-test='django test -n --noinput'
 alias django-db-reset='dropdb working && createdb -T main working && django-migrate'
@@ -41,6 +38,10 @@ alias storybook-start='pulse && npm run start-storybook'
 alias add-test-plan='./bin/add-test-plan'
 alias refresh-deps='pip-install && npm ci'
 
+# Remote DB
+export PULSE_REMOTE_ENV=".env.remote"
+alias honcho-remote='honcho -e .env,$PULSE_REMOTE_ENV start'
+alias django-remote='env $(cat .env $PULSE_REMOTE_ENV | xargs) python ./backend/manage.py'
 
 with-escalated() {
   local role_arn=$AWS_ESCALATION_ROLE_ARN

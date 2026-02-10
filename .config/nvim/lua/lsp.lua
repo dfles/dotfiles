@@ -1,8 +1,8 @@
 vim.lsp.enable({
-  "basedpyright",
   "eslint",
   "lua_ls",
   "terraformls",
+  "ty",
   "vtsls",
 })
 

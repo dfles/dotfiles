@@ -30,8 +30,16 @@ heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1
 warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
 
 # ── Validate ───────────────────────────────────────────────────────────────────
-ISSUE_ID="${1:-}"
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: convoke <ISSUE-ID>"
+ISSUE_ID=""
+COGITATE_FLAGS=()
+for arg in "$@"; do
+    case "$arg" in
+        --*) COGITATE_FLAGS+=("$arg") ;;
+        *)   ISSUE_ID="$arg" ;;
+    esac
+done
+
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: convoke [--no-claude] <ISSUE-ID>"
 
 for cmd in curl jq tmux nvim cogitate; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -108,7 +116,7 @@ tmux rename-window -t "${SESSION_NAME}:0" "${ISSUE_ID}"
 
 tmux split-window -h -p 50 -t "${SESSION_NAME}:0" -c "$REPO"
 
-tmux send-keys -t "${SESSION_NAME}:0.0" "cogitate $(printf '%q' "$ISSUE_ID")" Enter
+tmux send-keys -t "${SESSION_NAME}:0.0" "cogitate ${COGITATE_FLAGS[*]+"${COGITATE_FLAGS[*]}"} $(printf '%q' "$ISSUE_ID")" Enter
 tmux send-keys -t "${SESSION_NAME}:0.1" \
     "until [[ -f $(printf '%q' "$PLAN_FILE") ]]; do sleep 1; done; nvim $(printf '%q' "$PLAN_FILE")" Enter
 

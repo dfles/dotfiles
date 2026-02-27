@@ -5,6 +5,7 @@
 [core]
 	editor = nvim
 	pager = less -iXFR
+	excludesfile = ~/.gitignore_global
 [push]
 	default = upstream
 	autoSetupRemote = true

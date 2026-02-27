@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+#
+# excommunicate — Reclaim the machine spirits consumed by a cogitated issue.
+#
+# Kills the tmux session, removes the git worktree, and optionally
+# deletes the branch for a given Linear issue.
+#
+# Usage: excommunicate <ISSUE-ID>   (e.g. excommunicate ENG-999999)
+#
+# Optional environment:
+#   COGITATE_REPO    — Absolute path to the target repo
+
+set -euo pipefail
+
+# ── Colours ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# ── Output helpers ──────────────────────────────────────────────────────────────
+rite()    { echo -e "${CYAN}${BOLD}  ⚙  RITE ${1}${NC}"; }
+litany()  { echo -e "${DIM}     › ${1}${NC}"; }
+blessed() { echo -e "${GREEN}  ✦  ${1}${NC}"; }
+heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1; }
+warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
+
+echo ""
+echo -e "${BOLD}${RED}  ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}${RED}  ║      E X C O M M U N I C A T I O N   R I T E             ║${NC}"
+echo -e "${BOLD}${RED}  ║              Cleanse. Purify. Reclaim.                   ║${NC}"
+echo -e "${BOLD}${RED}  ╚══════════════════════════════════════════════════════════╝${NC}"
+echo ""
+
+ISSUE_ID="${1:-}"
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: excommunicate <ISSUE-ID>"
+
+REPO="${COGITATE_REPO:-}"
+[[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
+[[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
+
+WORKTREES_DIR="${REPO}/.worktrees"
+SESSION_NAME=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+
+# ── Rite I: Silence the Tmux Congregation ──────────────────────────────────────
+rite "I — Silencing the Tmux Congregation"
+
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    tmux kill-session -t "$SESSION_NAME"
+    blessed "Session '${SESSION_NAME}' dissolved."
+else
+    warning "No session '${SESSION_NAME}' found — already silent."
+fi
+
+# ── Rite II: Excise the Worktree ───────────────────────────────────────────────
+rite "II — Excising the Worktree"
+
+# Find the worktree directory by matching the issue ID prefix
+ISSUE_PREFIX=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')
+WORKTREE_PATH=$(find "$WORKTREES_DIR" -maxdepth 1 -type d -name "${ISSUE_PREFIX}*" 2>/dev/null | head -1)
+
+if [[ -z "$WORKTREE_PATH" ]]; then
+    warning "No worktree found matching '${ISSUE_PREFIX}*' — already excised."
+else
+    BRANCH_NAME=$(basename "$WORKTREE_PATH")
+    litany "Removing worktree: ${WORKTREE_PATH}"
+    cd "$REPO"
+    git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
+    git worktree prune 2>/dev/null || true
+    blessed "Worktree excised."
+
+    # ── Rite III: Optionally Delete the Branch ──────────────────────────────────
+    rite "III — Branch Disposal"
+
+    if git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
+        echo -e "${YELLOW}  Delete branch '${BRANCH_NAME}'? [y/N]${NC} \c"
+        read -r CONFIRM
+        if [[ "${CONFIRM,,}" == "y" ]]; then
+            git branch -D "$BRANCH_NAME"
+            blessed "Branch '${BRANCH_NAME}' deleted."
+        else
+            warning "Branch preserved. The Machine Spirit lingers."
+        fi
+    fi
+fi
+
+echo ""
+echo -e "${GREEN}${BOLD}  ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}${BOLD}  ║   THE PURGE IS COMPLETE. THE OMNISSIAH IS APPEASED.     ║${NC}"
+echo -e "${GREEN}${BOLD}  ╚══════════════════════════════════════════════════════════╝${NC}"
+echo ""

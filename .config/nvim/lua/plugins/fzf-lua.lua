@@ -64,6 +64,10 @@ return {
         fzf.files({ cwd = vim.fn.stdpath("config") })
       end, { desc = "nvim files" })
 
+      vim.keymap.set("n", "<leader>fb", function()
+        fzf.files({ cwd = vim.fn.expand("~/workspace/bin") })
+      end, { desc = "workspace/bin files" })
+
       vim.keymap.set("n", "<leader>f/", function()
         fzf.live_grep({ grep_open_files = true })
       end, { desc = "Search in open files" })

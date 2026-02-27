@@ -122,5 +122,13 @@ tmux send-keys -t "${SESSION_NAME}:0.1" \
 
 tmux select-pane -t "${SESSION_NAME}:0.0"
 
+# Window 1: terminal in the worktree (waits for cogitate to create it)
+tmux new-window -t "${SESSION_NAME}:1" -n "terminal" -c "$REPO"
+tmux send-keys -t "${SESSION_NAME}:1" \
+    "until [[ -d $(printf '%q' "$WORKTREE_PATH") ]]; do sleep 1; done; cd $(printf '%q' "$WORKTREE_PATH")" Enter
+
+# Return focus to window 0
+tmux select-window -t "${SESSION_NAME}:0"
+
 blessed "Congregation assembling: ${SESSION_NAME}"
 litany "Switch when ready: tmux switch-client -t ${SESSION_NAME}"

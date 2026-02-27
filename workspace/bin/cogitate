@@ -38,8 +38,16 @@ echo -e "${BOLD}${GREEN}  ╚═════════════════
 echo ""
 
 # ── Validate ───────────────────────────────────────────────────────────────────
-ISSUE_ID="${1:-}"
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate <ISSUE-ID>"
+NO_CLAUDE=false
+ISSUE_ID=""
+for arg in "$@"; do
+    case "$arg" in
+        --no-claude) NO_CLAUDE=true ;;
+        *)     ISSUE_ID="$arg" ;;
+    esac
+done
+
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] <ISSUE-ID>"
 
 for cmd in curl jq git claude; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -172,11 +180,15 @@ The plan file must contain these sections:
 Write only the plan. The engineer will review it before implementation starts."
 
     cd "$WORKTREE_PATH"
-    claude -p "$PLAN_PROMPT" \
-        --allowedTools "Read,Write,Glob,Grep,LS" \
-        --permission-mode bypassPermissions \
-        --no-session-persistence \
-        >/dev/null 2>&1 || true
+    if [[ "$NO_CLAUDE" == true ]]; then
+        warning "Planning Cogitator silenced."
+    else
+        claude -p "$PLAN_PROMPT" \
+            --allowedTools "Read,Write,Glob,Grep,LS" \
+            --permission-mode bypassPermissions \
+            --no-session-persistence \
+            >/dev/null 2>&1 || true
+    fi
 
     if [[ ! -f "$PLAN_FILE" ]]; then
         warning "Planning Cogitator did not inscribe the file. Creating placeholder litany."
@@ -231,4 +243,8 @@ echo -e "${GREEN}${BOLD}  ╚═════════════════
 echo ""
 
 cd "$WORKTREE_PATH"
-exec claude --append-system-prompt "$(printf '%s' "$CLAUDE_SYSTEM")"
+if [[ "$NO_CLAUDE" == true ]]; then
+    blessed "Dry run complete. Worktree and plan ready at ${WORKTREE_PATH}"
+else
+    exec claude --append-system-prompt "$(printf '%s' "$CLAUDE_SYSTEM")"
+fi

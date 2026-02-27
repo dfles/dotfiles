@@ -118,7 +118,7 @@ tmux split-window -h -p 50 -t "${SESSION_NAME}:0" -c "$REPO"
 
 tmux send-keys -t "${SESSION_NAME}:0.0" "cogitate ${COGITATE_FLAGS[*]+"${COGITATE_FLAGS[*]}"} $(printf '%q' "$ISSUE_ID")" Enter
 tmux send-keys -t "${SESSION_NAME}:0.1" \
-    "until [[ -f $(printf '%q' "$PLAN_FILE") ]]; do sleep 1; done; nvim $(printf '%q' "$PLAN_FILE")" Enter
+    "until [[ -f $(printf '%q' "$PLAN_FILE") ]]; do sleep 1; done; cd $(printf '%q' "$WORKTREE_PATH") && nvim RITE_OF_IMPLEMENTATION.md" Enter
 
 tmux select-pane -t "${SESSION_NAME}:0.0"
 

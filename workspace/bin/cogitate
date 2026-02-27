@@ -135,6 +135,11 @@ else
     blessed "Worktree sanctified at ${WORKTREE_PATH}"
 fi
 
+if [[ -f "${REPO}/.env" && ! -e "${WORKTREE_PATH}/.env" ]]; then
+    ln -s "${REPO}/.env" "${WORKTREE_PATH}/.env"
+    litany ".env linked."
+fi
+
 PLAN_FILE="${WORKTREE_PATH}/RITE_OF_IMPLEMENTATION.md"
 
 # ── Rite III: Inscribing the Rite of Implementation ────────────────────────────

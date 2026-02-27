@@ -3,15 +3,13 @@
 # cogitate — Summon the Machine Spirit for a Linear issue.
 #
 # Fetches a Linear issue, consecrates a git worktree, channels the Omnissiah's
-# wisdom into a Rite of Implementation, and assembles the sacred workspace.
+# wisdom into a Rite of Implementation, then yields control to Claude.
 #
 # Usage: cogitate <ISSUE-ID>   (e.g. cogitate ENG-999999)
 #
 # Required environment:
 #   LINEAR_API_KEY   — Linear personal API key
-#
-# Optional environment:
-#   COGITATE_REPO    — Absolute path to the target repo (required)
+#   COGITATE_REPO    — Absolute path to the target repo
 
 set -euo pipefail
 
@@ -33,17 +31,17 @@ warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
 
 # ── Banner ──────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}${CYAN}  ╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${CYAN}  ║         C O G I T A T O R   A R R A Y   O N L I N E      ║${NC}"
-echo -e "${BOLD}${CYAN}  ║              In Omnissiam Mechanicus Fidelis             ║${NC}"
-echo -e "${BOLD}${CYAN}  ╚══════════════════════════════════════════════════════════╝${NC}"
+echo -e "${BOLD}${GREEN}  ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}${GREEN}  ║         C O G I T A T O R   A R R A Y   O N L I N E      ║${NC}"
+echo -e "${BOLD}${GREEN}  ║              In Omnissiam Mechanicus Fidelis             ║${NC}"
+echo -e "${BOLD}${GREEN}  ╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ── Validate inputs & dependencies ─────────────────────────────────────────────
+# ── Validate ───────────────────────────────────────────────────────────────────
 ISSUE_ID="${1:-}"
 [[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate <ISSUE-ID>"
 
-for cmd in curl jq tmux nvim git claude; do
+for cmd in curl jq git claude; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
 done
 
@@ -84,7 +82,6 @@ RESPONSE=$(curl -s -X POST \
     --data "$(jq -n --arg q "$QUERY" --arg id "$ISSUE_ID" '{query: $q, variables: {id: $id}}')" \
     "https://api.linear.app/graphql")
 
-# Surface any API errors
 if echo "$RESPONSE" | jq -e '.errors' > /dev/null 2>&1; then
     heresy "Linear rejected the query: $(echo "$RESPONSE" | jq -r '.errors[0].message')"
 fi
@@ -99,7 +96,6 @@ PARENT_DESC=$(echo   "$RESPONSE" | jq -r '.data.issue.parent.description // empt
 PROJECT_NAME=$(echo  "$RESPONSE" | jq -r '.data.issue.project.name // empty')
 PROJECT_DESC=$(echo  "$RESPONSE" | jq -r '.data.issue.project.description // empty')
 
-# Fall back to a slug if Linear didn't supply a branch name
 if [[ -z "$BRANCH_NAME" ]]; then
     SLUG=$(echo "$ISSUE_TITLE" \
         | tr '[:upper:]' '[:lower:]' \
@@ -107,7 +103,7 @@ if [[ -z "$BRANCH_NAME" ]]; then
         | sed 's/--*/-/g' \
         | sed 's/^-\|-$//g' \
         | cut -c1-50)
-    BRANCH_NAME="${ISSUE_ID,,}-${SLUG}"
+    BRANCH_NAME="$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')-${SLUG}"
 fi
 
 blessed "${ISSUE_ID}: ${ISSUE_TITLE}"
@@ -125,9 +121,8 @@ if [[ -d "$WORKTREE_PATH" ]]; then
     warning "Reliquary already exists — the Machine Spirit preserves prior work."
 else
     cd "$REPO"
-    # Try creating a new branch; if it already exists, check it out instead
-    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" 2>&1 >/dev/null \
-        || git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" 2>&1 >/dev/null \
+    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" >/dev/null 2>&1 \
+        || git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" >/dev/null 2>&1 \
         || heresy "Failed to consecrate worktree. The branch '${BRANCH_NAME}' may already exist elsewhere."
     blessed "Worktree sanctified at ${WORKTREE_PATH}"
 fi
@@ -144,7 +139,6 @@ else
     litany "(This rite may require several moments of contemplation.)"
     echo ""
 
-    # Build context block for parent/project if present
     CONTEXT_BLOCK=""
     if [[ -n "$PROJECT_NAME" ]]; then
         CONTEXT_BLOCK+="**Project:** ${PROJECT_NAME}\n"
@@ -177,13 +171,12 @@ The plan file must contain these sections:
 
 Write only the plan. The engineer will review it before implementation starts."
 
-    # Run claude non-interactively in the worktree; it writes the plan file via its Write tool
     cd "$WORKTREE_PATH"
     claude -p "$PLAN_PROMPT" \
         --allowedTools "Read,Write,Glob,Grep,LS" \
         --permission-mode bypassPermissions \
         --no-session-persistence \
-        2>/dev/null || true
+        >/dev/null 2>&1 || true
 
     if [[ ! -f "$PLAN_FILE" ]]; then
         warning "Planning Cogitator did not inscribe the file. Creating placeholder litany."
@@ -221,62 +214,21 @@ PLACEHOLDER
     blessed "Rite of Implementation inscribed."
 fi
 
-# ── Rite IV: Assembling the Sacred Workspace ───────────────────────────────────
-rite "IV — Assembling the Sacred Workspace"
-
-SESSION_NAME=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
-
-# Use switch-client when already inside tmux to avoid nested session warning
-tmux_attach() {
-    if [[ -n "${TMUX:-}" ]]; then
-        tmux switch-client -t "$1"
-    else
-        tmux attach-session -t "$1"
-    fi
-}
-
-if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-    warning "Congregation '${SESSION_NAME}' already assembled."
-    litany "Attaching to existing conclave..."
-    echo ""
-    tmux_attach "$SESSION_NAME"
-    exit 0
-fi
-
-litany "Convening tmux congregation: ${SESSION_NAME}"
-
-# Create detached session in the worktree directory
-tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
-tmux rename-window -t "${SESSION_NAME}:0" "${ISSUE_ID}"
-
-# Left pane (40%): claude interactive with issue context in system prompt
-# Right pane (60%): nvim with the plan
-tmux split-window -h -p 60 -t "${SESSION_NAME}:0"
-
+# ── Yield to Claude ─────────────────────────────────────────────────────────────
 CLAUDE_SYSTEM="You are working on ${ISSUE_ID}: ${ISSUE_TITLE}.
 
-A Rite of Implementation has been prepared at RITE_OF_IMPLEMENTATION.md in the current worktree. The engineer is reviewing it in the adjacent pane. Once they are satisfied with the plan, assist them in carrying out the implementation steps.
+A Rite of Implementation has been prepared at RITE_OF_IMPLEMENTATION.md in the current worktree. The engineer will review it before implementation begins.
 
 Worktree: ${WORKTREE_PATH}
 Branch: ${BRANCH_NAME}"
 
-# Left pane (0): claude
-tmux send-keys -t "${SESSION_NAME}:0.0" \
-    "claude --append-system-prompt $(printf '%q' "$CLAUDE_SYSTEM")" Enter
-
-# Right pane (1): nvim
-tmux send-keys -t "${SESSION_NAME}:0.1" "nvim RITE_OF_IMPLEMENTATION.md" Enter
-
-# Focus the claude pane so the user lands there on attach
-tmux select-pane -t "${SESSION_NAME}:0.0"
-
-# ── Ave Omnissiah ───────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}  ╔══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}${BOLD}  ║   THE OMNISSIAH GUIDES YOUR MECHADENDRITES               ║${NC}"
-echo -e "${GREEN}${BOLD}  ║   The rites for ${ISSUE_ID} are prepared.                ║${NC}"
+echo -e "${GREEN}${BOLD}  ║   The rites are prepared.                                ║${NC}"
 echo -e "${GREEN}${BOLD}  ║   Review the plan. Then let implementation commence.     ║${NC}"
 echo -e "${GREEN}${BOLD}  ╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-tmux_attach "$SESSION_NAME"
+cd "$WORKTREE_PATH"
+exec claude --append-system-prompt "$(printf '%s' "$CLAUDE_SYSTEM")"

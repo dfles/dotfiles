@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+#
+# convoke — Assemble the sacred congregation for a Linear issue.
+#
+# Calls the Linear API to determine the worktree path, creates a named tmux
+# session, runs cogitate in the left pane, and opens the Rite of Implementation
+# in nvim on the right once it appears.
+#
+# Usage: convoke <ISSUE-ID>   (e.g. convoke ENG-999999)
+#
+# Required environment:
+#   LINEAR_API_KEY   — Linear personal API key
+#   COGITATE_REPO    — Absolute path to the target repo
+
+set -euo pipefail
+
+# ── Colours ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# ── Output helpers ──────────────────────────────────────────────────────────────
+litany()  { echo -e "${DIM}     › ${1}${NC}"; }
+blessed() { echo -e "${GREEN}  ✦  ${1}${NC}"; }
+heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1; }
+warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
+
+# ── Validate ───────────────────────────────────────────────────────────────────
+ISSUE_ID="${1:-}"
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: convoke <ISSUE-ID>"
+
+for cmd in curl jq tmux nvim cogitate; do
+    command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
+done
+
+LINEAR_API_KEY="${LINEAR_API_KEY:-}"
+[[ -z "$LINEAR_API_KEY" ]] && heresy "LINEAR_API_KEY not set. Export your Linear API key before invoking this rite."
+
+REPO="${COGITATE_REPO:-}"
+[[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
+[[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
+
+SESSION_NAME=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+
+# Use switch-client when already inside tmux to avoid nested session warning
+tmux_attach() {
+    if [[ -n "${TMUX:-}" ]]; then
+        tmux switch-client -t "$1"
+    else
+        tmux attach-session -t "$1"
+    fi
+}
+
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    warning "Congregation '${SESSION_NAME}' already assembled."
+    litany "Attaching to existing conclave..."
+    echo ""
+    tmux_attach "$SESSION_NAME"
+    exit 0
+fi
+
+# ── Resolve worktree path via Linear ───────────────────────────────────────────
+litany "Querying Linear to resolve worktree path..."
+
+QUERY='query IssueById($id: String!) {
+  issue(id: $id) {
+    title
+    branchName
+  }
+}'
+
+RESPONSE=$(curl -s -X POST \
+    -H "Authorization: ${LINEAR_API_KEY}" \
+    -H "Content-Type: application/json" \
+    --data "$(jq -n --arg q "$QUERY" --arg id "$ISSUE_ID" '{query: $q, variables: {id: $id}}')" \
+    "https://api.linear.app/graphql")
+
+if echo "$RESPONSE" | jq -e '.errors' > /dev/null 2>&1; then
+    heresy "Linear rejected the query: $(echo "$RESPONSE" | jq -r '.errors[0].message')"
+fi
+
+ISSUE_TITLE=$(echo "$RESPONSE" | jq -r '.data.issue.title // empty')
+[[ -z "$ISSUE_TITLE" ]] && heresy "Issue ${ISSUE_ID} not found in the Linear archives."
+
+BRANCH_NAME=$(echo "$RESPONSE" | jq -r '.data.issue.branchName // empty')
+if [[ -z "$BRANCH_NAME" ]]; then
+    SLUG=$(echo "$ISSUE_TITLE" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed 's/[^a-z0-9]/-/g' \
+        | sed 's/--*/-/g' \
+        | sed 's/^-\|-$//g' \
+        | cut -c1-50)
+    BRANCH_NAME="$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')-${SLUG}"
+fi
+
+WORKTREE_PATH="${REPO}/.worktrees/${BRANCH_NAME}"
+PLAN_FILE="${WORKTREE_PATH}/RITE_OF_IMPLEMENTATION.md"
+
+# ── Assemble the congregation ───────────────────────────────────────────────────
+litany "Convening tmux congregation: ${SESSION_NAME}"
+
+tmux new-session -d -s "$SESSION_NAME" -c "$REPO"
+tmux rename-window -t "${SESSION_NAME}:0" "${ISSUE_ID}"
+
+tmux split-window -h -p 50 -t "${SESSION_NAME}:0" -c "$REPO"
+
+tmux send-keys -t "${SESSION_NAME}:0.0" "cogitate $(printf '%q' "$ISSUE_ID")" Enter
+tmux send-keys -t "${SESSION_NAME}:0.1" \
+    "until [[ -f $(printf '%q' "$PLAN_FILE") ]]; do sleep 1; done; nvim $(printf '%q' "$PLAN_FILE")" Enter
+
+tmux select-pane -t "${SESSION_NAME}:0.0"
+
+blessed "Congregation assembling: ${SESSION_NAME}"
+litany "Switch when ready: tmux switch-client -t ${SESSION_NAME}"

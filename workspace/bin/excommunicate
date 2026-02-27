@@ -78,7 +78,7 @@ else
     if git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
         echo -e "${YELLOW}  Delete branch '${BRANCH_NAME}'? [y/N]${NC} \c"
         read -r CONFIRM
-        if [[ "${CONFIRM,,}" == "y" ]]; then
+        if [[ "$CONFIRM" == "y" || "$CONFIRM" == "Y" ]]; then
             git branch -D "$BRANCH_NAME"
             blessed "Branch '${BRANCH_NAME}' deleted."
         else
@@ -89,6 +89,6 @@ fi
 
 echo ""
 echo -e "${GREEN}${BOLD}  ╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}  ║   THE PURGE IS COMPLETE. THE OMNISSIAH IS APPEASED.     ║${NC}"
+echo -e "${GREEN}${BOLD}  ║   THE PURGE IS COMPLETE. THE OMNISSIAH IS APPEASED.      ║${NC}"
 echo -e "${GREEN}${BOLD}  ╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""

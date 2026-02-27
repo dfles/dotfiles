@@ -32,7 +32,6 @@ return {
       formatters_by_ft = {
         lua = { "stylua" },
         python = { "ruff_fix", "ruff_format" },
-        toml = { "taplo" },
         markdown = { "prettier" },
         javascript = { "eslint_d", "prettier" },
         javascriptreact = { "eslint_d", "prettier" },

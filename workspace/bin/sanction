@@ -125,7 +125,7 @@ tmux rename-window -t "${SESSION_NAME}:0" "review: ${BRANCH}"
 # Right pane (60%): nvim in worktree root
 tmux split-window -h -p 60 -t "${SESSION_NAME}:0" -c "$WORKTREE_PATH"
 tmux send-keys -t "${SESSION_NAME}:0.0" 'claude --append-system-prompt "$SANCTION_PROMPT" "Begin the review."' Enter
-tmux send-keys -t "${SESSION_NAME}:0.1" "nvim ." Enter
+tmux send-keys -t "${SESSION_NAME}:0.1" "activate && nvim ." Enter
 tmux select-pane -t "${SESSION_NAME}:0.0"
 
 # Window 1: terminal in the worktree

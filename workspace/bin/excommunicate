@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 #
-# excommunicate — Reclaim the machine spirits consumed by a cogitated issue.
+# excommunicate — Reclaim the machine spirits consumed by a cogitated issue or sanction review.
 #
 # Kills the tmux session, removes the git worktree, and optionally
-# deletes the branch for a given Linear issue.
+# deletes the branch.
 #
-# Usage: excommunicate <ISSUE-ID>   (e.g. excommunicate ENG-999999)
+# Usage:
+#   excommunicate <ISSUE-ID>            (e.g. excommunicate ENG-999999)
+#   excommunicate --review <BRANCH>     (e.g. excommunicate --review dfles/eng-205-feature)
 #
 # Optional environment:
 #   COGITATE_REPO    — Absolute path to the target repo
@@ -35,57 +37,69 @@ echo -e "${BOLD}${RED}  ║              Cleanse. Purify. Reclaim.              
 echo -e "${BOLD}${RED}  ╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-ISSUE_ID="${1:-}"
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: excommunicate <ISSUE-ID>"
+TARGET="${1:-}"
+[[ -z "$TARGET" ]] && heresy "No target provided.\n     Usage: excommunicate <ISSUE-ID|BRANCH>"
 
 REPO="${COGITATE_REPO:-}"
 [[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
 [[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
 
 WORKTREES_DIR="${REPO}/.worktrees"
-SESSION_NAME=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+SANITIZED=$(echo "$TARGET" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
 
-# ── Rite I: Silence the Tmux Congregation ──────────────────────────────────────
-rite "I — Silencing the Tmux Congregation"
+# Resolve which session(s) exist — issue workflow, review workflow, or both
+CANDIDATES=()
+tmux has-session -t "$SANITIZED" 2>/dev/null            && CANDIDATES+=("$SANITIZED")
+tmux has-session -t "review-${SANITIZED}" 2>/dev/null   && CANDIDATES+=("review-${SANITIZED}")
+[[ -d "${WORKTREES_DIR}/${SANITIZED}" ]]                 && [[ ! " ${CANDIDATES[*]} " =~ " ${SANITIZED} " ]]          && CANDIDATES+=("$SANITIZED")
+[[ -d "${WORKTREES_DIR}/review-${SANITIZED}" ]]          && [[ ! " ${CANDIDATES[*]} " =~ " review-${SANITIZED} " ]]   && CANDIDATES+=("review-${SANITIZED}")
 
-if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-    tmux kill-session -t "$SESSION_NAME"
-    blessed "Session '${SESSION_NAME}' dissolved."
-else
-    warning "No session '${SESSION_NAME}' found — already silent."
-fi
+# Default to direct match if nothing found, so warnings print sensibly
+[[ ${#CANDIDATES[@]} -eq 0 ]] && CANDIDATES+=("$SANITIZED")
 
-# ── Rite II: Excise the Worktree ───────────────────────────────────────────────
-rite "II — Excising the Worktree"
+for SESSION_NAME in "${CANDIDATES[@]}"; do
+    litany "Processing: ${SESSION_NAME}"
 
-# Find the worktree directory by matching the issue ID prefix
-ISSUE_PREFIX=$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')
-WORKTREE_PATH=$(find "$WORKTREES_DIR" -maxdepth 1 -type d -name "${ISSUE_PREFIX}*" 2>/dev/null | head -1)
+    # ── Rite I: Silence the Tmux Congregation ────────────────────────────────
+    rite "I — Silencing the Tmux Congregation"
 
-if [[ -z "$WORKTREE_PATH" ]]; then
-    warning "No worktree found matching '${ISSUE_PREFIX}*' — already excised."
-else
-    BRANCH_NAME=$(basename "$WORKTREE_PATH")
-    litany "Removing worktree: ${WORKTREE_PATH}"
-    cd "$REPO"
-    git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
-    git worktree prune 2>/dev/null || true
-    blessed "Worktree excised."
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        tmux kill-session -t "$SESSION_NAME"
+        blessed "Session '${SESSION_NAME}' dissolved."
+    else
+        warning "No session '${SESSION_NAME}' found — already silent."
+    fi
 
-    # ── Rite III: Optionally Delete the Branch ──────────────────────────────────
-    rite "III — Branch Disposal"
+    # ── Rite II: Excising the Worktree ───────────────────────────────────────
+    rite "II — Excising the Worktree"
 
-    if git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
-        echo -e "${YELLOW}  Delete branch '${BRANCH_NAME}'? [y/N]${NC} \c"
-        read -r CONFIRM
-        if [[ "$CONFIRM" == "y" || "$CONFIRM" == "Y" ]]; then
-            git branch -D "$BRANCH_NAME"
-            blessed "Branch '${BRANCH_NAME}' deleted."
-        else
-            warning "Branch preserved. The Machine Spirit lingers."
+    WORKTREE_PATH=$(find "$WORKTREES_DIR" -maxdepth 1 -type d -name "${SESSION_NAME}*" 2>/dev/null | head -1)
+
+    if [[ -z "$WORKTREE_PATH" ]]; then
+        warning "No worktree found matching '${SESSION_NAME}*' — already excised."
+    else
+        BRANCH_NAME=$(basename "$WORKTREE_PATH")
+        litany "Removing worktree: ${WORKTREE_PATH}"
+        cd "$REPO"
+        git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
+        git worktree prune 2>/dev/null || true
+        blessed "Worktree excised."
+
+        # ── Rite III: Optionally Delete the Branch ───────────────────────────
+        rite "III — Branch Disposal"
+
+        if git show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
+            echo -e "${YELLOW}  Delete branch '${BRANCH_NAME}'? [y/N]${NC} \c"
+            read -r CONFIRM
+            if [[ "$CONFIRM" == "y" || "$CONFIRM" == "Y" ]]; then
+                git branch -D "$BRANCH_NAME"
+                blessed "Branch '${BRANCH_NAME}' deleted."
+            else
+                warning "Branch preserved. The Machine Spirit lingers."
+            fi
         fi
     fi
-fi
+done
 
 echo ""
 echo -e "${GREEN}${BOLD}  ╔══════════════════════════════════════════════════════════╗${NC}"

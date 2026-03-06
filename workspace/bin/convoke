@@ -114,7 +114,7 @@ litany "Convening tmux congregation: ${SESSION_NAME}"
 tmux new-session -d -s "$SESSION_NAME" -c "$REPO"
 tmux rename-window -t "${SESSION_NAME}:0" "${ISSUE_ID}"
 
-tmux split-window -h -p 50 -t "${SESSION_NAME}:0" -c "$REPO"
+tmux split-window -h -p 60 -t "${SESSION_NAME}:0" -c "$REPO"
 
 tmux send-keys -t "${SESSION_NAME}:0.0" "cogitate ${COGITATE_FLAGS[*]+"${COGITATE_FLAGS[*]}"} $(printf '%q' "$ISSUE_ID")" Enter
 tmux send-keys -t "${SESSION_NAME}:0.1" \

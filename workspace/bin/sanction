@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+#
+# sanction — Determine whether a branch may serve the codebase.
+#
+# Creates a git worktree for the target branch and assembles a review
+# workspace with Claude acting as a senior engineer conducting the review.
+#
+# Usage: sanction <BRANCH>   (e.g. sanction dfles/eng-205-my-feature)
+#
+# Required environment:
+#   COGITATE_REPO    — Absolute path to the target repo
+
+set -euo pipefail
+
+# ── Colours ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# ── Output helpers ──────────────────────────────────────────────────────────────
+rite()    { echo -e "${CYAN}${BOLD}  ⚙  RITE ${1}${NC}"; }
+litany()  { echo -e "${DIM}     › ${1}${NC}"; }
+blessed() { echo -e "${GREEN}  ✦  ${1}${NC}"; }
+heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1; }
+warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
+
+# ── Banner ──────────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}${CYAN}  ╔══════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}${CYAN}  ║           S A N C T I O N   R I T E                      ║${NC}"
+echo -e "${BOLD}${CYAN}  ║           Iudex Omnium                                   ║${NC}"
+echo -e "${BOLD}${CYAN}  ╚══════════════════════════════════════════════════════════╝${NC}"
+echo ""
+
+# ── Validate ───────────────────────────────────────────────────────────────────
+BRANCH="${1:-}"
+[[ -z "$BRANCH" ]] && heresy "No branch provided.\n     Usage: sanction <BRANCH>"
+
+for cmd in tmux nvim git claude; do
+    command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
+done
+
+REPO="${COGITATE_REPO:-}"
+[[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
+[[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
+
+# Verify the branch exists
+git -C "$REPO" show-ref --verify --quiet "refs/heads/${BRANCH}" \
+    || git -C "$REPO" show-ref --verify --quiet "refs/remotes/origin/${BRANCH}" \
+    || heresy "Branch '${BRANCH}' not found in the local or remote reliquary."
+
+WORKTREES_DIR="${REPO}/.worktrees"
+WORKTREE_NAME="review-$(echo "$BRANCH" | tr '/' '-')"
+WORKTREE_PATH="${WORKTREES_DIR}/${WORKTREE_NAME}"
+SESSION_NAME="$WORKTREE_NAME"
+
+# Use switch-client when already inside tmux to avoid nested session warning
+tmux_attach() {
+    if [[ -n "${TMUX:-}" ]]; then
+        tmux switch-client -t "$1"
+    else
+        tmux attach-session -t "$1"
+    fi
+}
+
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    warning "Tribunal '${SESSION_NAME}' already convened."
+    litany "Attaching to existing proceedings..."
+    echo ""
+    tmux_attach "$SESSION_NAME"
+    exit 0
+fi
+
+# ── Rite I: Consecration of the Review Reliquary ───────────────────────────────
+rite "I — Consecration of the Review Reliquary"
+litany "Branch: ${BRANCH}"
+
+mkdir -p "$WORKTREES_DIR"
+
+if [[ -d "$WORKTREE_PATH" ]]; then
+    warning "Reliquary already exists — the Machine Spirit preserves prior proceedings."
+else
+    cd "$REPO"
+    git worktree add "$WORKTREE_PATH" "$BRANCH" >/dev/null 2>&1 \
+        || heresy "Failed to consecrate review worktree for '${BRANCH}'."
+    blessed "Review reliquary sanctified at ${WORKTREE_PATH}"
+fi
+
+# Link .env if present
+if [[ -f "${REPO}/.env" && ! -e "${WORKTREE_PATH}/.env" ]]; then
+    ln -s "${REPO}/.env" "${WORKTREE_PATH}/.env"
+    litany ".env linked."
+fi
+
+# ── Rite II: Assembling the Tribunal ───────────────────────────────────────────
+rite "II — Assembling the Tribunal"
+litany "Convening tmux tribunal: ${SESSION_NAME}"
+
+REVIEW_PROMPT="You are a senior engineer conducting a code review of the branch \`${BRANCH}\`.
+
+Begin by orienting yourself:
+  git log main...HEAD --oneline     # commits in this branch
+  git diff main...HEAD              # full changeset
+
+Focus your review on:
+1. **Interfaces** — API contracts, function signatures, data model changes. Are they clean, consistent, and backward-compatible?
+2. **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
+3. **Ripple effects** — What does this change affect beyond the obvious? Consider: database migrations, caching behaviour, permissions, background tasks, serialization, and frontend contracts.
+4. **Best practices** — Reference the project style guides and existing patterns. Call out deviations.
+
+Be direct and specific. Note both issues and things done well. Your verdict determines whether this branch will be integrated into the codebase.
+
+Worktree: ${WORKTREE_PATH}
+Branch: ${BRANCH}"
+
+# Pass the prompt via env var to avoid tmux send-keys buffer limits and quoting issues
+tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH" -e "SANCTION_PROMPT=${REVIEW_PROMPT}"
+tmux rename-window -t "${SESSION_NAME}:0" "review: ${BRANCH}"
+
+# Left pane (40%): claude reviewer
+# Right pane (60%): nvim in worktree root
+tmux split-window -h -p 60 -t "${SESSION_NAME}:0" -c "$WORKTREE_PATH"
+tmux send-keys -t "${SESSION_NAME}:0.0" 'claude --append-system-prompt "$SANCTION_PROMPT" "Begin the review."' Enter
+tmux send-keys -t "${SESSION_NAME}:0.1" "nvim ." Enter
+tmux select-pane -t "${SESSION_NAME}:0.0"
+
+# Window 1: terminal in the worktree
+tmux new-window -t "${SESSION_NAME}:1" -n "terminal" -c "$WORKTREE_PATH"
+tmux select-window -t "${SESSION_NAME}:0"
+
+blessed "Tribunal convened: ${SESSION_NAME}"
+litany "Switch when ready: tmux switch-client -t ${SESSION_NAME}"

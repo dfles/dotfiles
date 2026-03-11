@@ -73,7 +73,10 @@ litany "URL: ${PR_URL}"
 rite "II — Communion with Linear"
 
 # Extract Linear issue IDs from the PR body (e.g. ENG-205, PX-2302)
-ISSUE_IDS=$(echo "$PR_BODY" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+# Check both PR body and branch name for Linear issue references
+BRANCH_ISSUE=$(echo "$BRANCH" | grep -oE '^[a-zA-Z]+-[0-9]+' | tr '[:lower:]' '[:upper:]' || true)
+BODY_ISSUES=$(echo "$PR_BODY" | grep -oE '[A-Z]+-[0-9]+' | sort -u || true)
+ISSUE_IDS=$(printf '%s\n%s' "$BRANCH_ISSUE" "$BODY_ISSUES" | grep -v '^$' | sort -u || true)
 LINEAR_CONTEXT=""
 
 if [[ -n "$ISSUE_IDS" ]]; then

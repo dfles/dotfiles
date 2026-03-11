@@ -6,8 +6,9 @@
 # deletes the branch.
 #
 # Usage:
+#   excommunicate                       (auto-detects from current tmux session)
 #   excommunicate <ISSUE-ID>            (e.g. excommunicate ENG-999999)
-#   excommunicate --review <BRANCH>     (e.g. excommunicate --review dfles/eng-205-feature)
+#   excommunicate <BRANCH>              (e.g. excommunicate dfles/eng-205-feature)
 #
 # Optional environment:
 #   COGITATE_REPO    — Absolute path to the target repo
@@ -38,24 +39,40 @@ echo -e "${BOLD}${RED}  ╚═════════════════�
 echo ""
 
 TARGET="${1:-}"
-[[ -z "$TARGET" ]] && heresy "No target provided.\n     Usage: excommunicate <ISSUE-ID|BRANCH>"
 
 REPO="${COGITATE_REPO:-}"
 [[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
 [[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
 
 WORKTREES_DIR="${REPO}/.worktrees"
-SANITIZED=$(echo "$TARGET" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
 
-# Resolve which session(s) exist — issue workflow, review workflow, or both
-CANDIDATES=()
-tmux has-session -t "$SANITIZED" 2>/dev/null            && CANDIDATES+=("$SANITIZED")
-tmux has-session -t "review-${SANITIZED}" 2>/dev/null   && CANDIDATES+=("review-${SANITIZED}")
-[[ -d "${WORKTREES_DIR}/${SANITIZED}" ]]                 && [[ ! " ${CANDIDATES[*]} " =~ " ${SANITIZED} " ]]          && CANDIDATES+=("$SANITIZED")
-[[ -d "${WORKTREES_DIR}/review-${SANITIZED}" ]]          && [[ ! " ${CANDIDATES[*]} " =~ " review-${SANITIZED} " ]]   && CANDIDATES+=("review-${SANITIZED}")
+SELF_DESTRUCT=false
 
-# Default to direct match if nothing found, so warnings print sensibly
-[[ ${#CANDIDATES[@]} -eq 0 ]] && CANDIDATES+=("$SANITIZED")
+# If no args, detect from current tmux session
+if [[ -z "$TARGET" ]]; then
+    [[ -z "${TMUX:-}" ]] && heresy "No target provided and not inside tmux.\n     Usage: excommunicate [<ISSUE-ID|BRANCH>]"
+    CURRENT_SESSION=$(tmux display-message -p '#S')
+    # Only auto-detect sessions that match our naming patterns
+    if [[ -d "${WORKTREES_DIR}/${CURRENT_SESSION}" ]]; then
+        litany "Auto-detected session: ${CURRENT_SESSION}"
+        CANDIDATES=("$CURRENT_SESSION")
+        SELF_DESTRUCT=true
+    else
+        heresy "Current session '${CURRENT_SESSION}' does not appear to be a cogitate or sanction session."
+    fi
+else
+    SANITIZED=$(echo "$TARGET" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+
+    # Resolve which session(s) exist — issue workflow, review workflow, or both
+    CANDIDATES=()
+    tmux has-session -t "$SANITIZED" 2>/dev/null            && CANDIDATES+=("$SANITIZED")
+    tmux has-session -t "review-${SANITIZED}" 2>/dev/null   && CANDIDATES+=("review-${SANITIZED}")
+    [[ -d "${WORKTREES_DIR}/${SANITIZED}" ]]                 && [[ ! " ${CANDIDATES[*]} " =~ " ${SANITIZED} " ]]          && CANDIDATES+=("$SANITIZED")
+    [[ -d "${WORKTREES_DIR}/review-${SANITIZED}" ]]          && [[ ! " ${CANDIDATES[*]} " =~ " review-${SANITIZED} " ]]   && CANDIDATES+=("review-${SANITIZED}")
+
+    # Default to direct match if nothing found, so warnings print sensibly
+    [[ ${#CANDIDATES[@]} -eq 0 ]] && CANDIDATES+=("$SANITIZED")
+fi
 
 for SESSION_NAME in "${CANDIDATES[@]}"; do
     litany "Processing: ${SESSION_NAME}"
@@ -63,7 +80,9 @@ for SESSION_NAME in "${CANDIDATES[@]}"; do
     # ── Rite I: Silence the Tmux Congregation ────────────────────────────────
     rite "I — Silencing the Tmux Congregation"
 
-    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    if [[ "$SELF_DESTRUCT" == true ]]; then
+        litany "Session kill deferred — we're inside it."
+    elif tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
         tmux kill-session -t "$SESSION_NAME"
         blessed "Session '${SESSION_NAME}' dissolved."
     else
@@ -106,3 +125,9 @@ echo -e "${GREEN}${BOLD}  ╔═════════════════
 echo -e "${GREEN}${BOLD}  ║   THE PURGE IS COMPLETE. THE OMNISSIAH IS APPEASED.      ║${NC}"
 echo -e "${GREEN}${BOLD}  ╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
+
+# Kill our own session last — tmux will switch us to the next available session
+if [[ "$SELF_DESTRUCT" == true ]]; then
+    sleep 1
+    tmux kill-session -t "$CURRENT_SESSION"
+fi

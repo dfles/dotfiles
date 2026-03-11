@@ -165,17 +165,23 @@ fi
 
 mkdir -p "$WORKTREES_DIR"
 
+cd "$REPO"
+
+# Remove stale worktree if it exists
 if [[ -d "$WORKTREE_PATH" ]]; then
-    litany "Reliquary exists — pulling latest..."
-    git -C "$WORKTREE_PATH" pull --ff-only >/dev/null 2>&1 || true
-    blessed "Reliquary refreshed."
-else
-    cd "$REPO"
-    git worktree add "$WORKTREE_PATH" "$BRANCH" >/dev/null 2>&1 \
-        || git worktree add "$WORKTREE_PATH" -b "$BRANCH" "origin/${BRANCH}" >/dev/null 2>&1 \
-        || heresy "Failed to consecrate review worktree for '${BRANCH}'."
-    blessed "Review reliquary sanctified at ${WORKTREE_PATH}"
+    litany "Removing stale reliquary..."
+    git worktree remove "$WORKTREE_PATH" --force >/dev/null 2>&1 || true
+    git worktree prune >/dev/null 2>&1
 fi
+
+# Update local branch to match origin (fails safely if checked out elsewhere)
+git branch -f "$BRANCH" "origin/${BRANCH}" >/dev/null 2>&1 || true
+
+git worktree add "$WORKTREE_PATH" "$BRANCH" >/dev/null 2>&1 \
+    || git worktree add "$WORKTREE_PATH" -b "$BRANCH" "origin/${BRANCH}" >/dev/null 2>&1 \
+    || git worktree add --detach "$WORKTREE_PATH" "origin/${BRANCH}" >/dev/null 2>&1 \
+    || heresy "Failed to consecrate review worktree for '${BRANCH}'."
+blessed "Review reliquary sanctified at ${WORKTREE_PATH}"
 
 # Link .env if present
 if [[ -f "${REPO}/.env" && ! -e "${WORKTREE_PATH}/.env" ]]; then

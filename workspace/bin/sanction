@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 #
-# sanction — Determine whether a branch may serve the codebase.
+# sanction — Determine whether a pull request may serve the codebase.
 #
-# Creates a git worktree for the target branch and assembles a review
+# Fetches PR details from GitHub, resolves any linked Linear issues for
+# context, checks out a fresh copy of the branch, and assembles a review
 # workspace with Claude acting as a senior engineer conducting the review.
 #
-# Usage: sanction <BRANCH>   (e.g. sanction dfles/eng-205-my-feature)
+# Usage: sanction <PR-NUMBER>   (e.g. sanction 20677)
 #
 # Required environment:
 #   COGITATE_REPO    — Absolute path to the target repo
+#
+# Optional environment:
+#   LINEAR_API_KEY   — Linear personal API key (enables issue context lookup)
 
 set -euo pipefail
 
@@ -37,10 +41,10 @@ echo -e "${BOLD}${CYAN}  ╚═════════════════�
 echo ""
 
 # ── Validate ───────────────────────────────────────────────────────────────────
-BRANCH="${1:-}"
-[[ -z "$BRANCH" ]] && heresy "No branch provided.\n     Usage: sanction <BRANCH>"
+PR_NUMBER="${1:-}"
+[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction <PR-NUMBER>"
 
-for cmd in tmux nvim git claude; do
+for cmd in tmux nvim git gh claude jq; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
 done
 
@@ -48,10 +52,91 @@ REPO="${COGITATE_REPO:-}"
 [[ -z "$REPO" ]] && heresy "COGITATE_REPO not set. Export the absolute path to your target repo."
 [[ -d "$REPO/.git" ]] || heresy "Reliquary not found at ${REPO}. Verify COGITATE_REPO is correct."
 
-# Verify the branch exists
-git -C "$REPO" show-ref --verify --quiet "refs/heads/${BRANCH}" \
-    || git -C "$REPO" show-ref --verify --quiet "refs/remotes/origin/${BRANCH}" \
-    || heresy "Branch '${BRANCH}' not found in the local or remote reliquary."
+# ── Rite I: Interrogation of the Pull Request ─────────────────────────────────
+rite "I — Interrogation of the Pull Request"
+litany "Querying GitHub for PR #${PR_NUMBER}..."
+
+cd "$REPO"
+PR_JSON=$(gh pr view "$PR_NUMBER" --json headRefName,title,body,url 2>/dev/null) \
+    || heresy "PR #${PR_NUMBER} not found. Verify the number and your gh authentication."
+
+BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
+PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
+PR_BODY=$(echo "$PR_JSON" | jq -r '.body')
+PR_URL=$(echo "$PR_JSON" | jq -r '.url')
+
+blessed "PR #${PR_NUMBER}: ${PR_TITLE}"
+litany "Branch: ${BRANCH}"
+litany "URL: ${PR_URL}"
+
+# ── Rite II: Communion with Linear (if linked) ────────────────────────────────
+rite "II — Communion with Linear"
+
+# Extract Linear issue IDs from the PR body (e.g. ENG-205, PX-2302)
+ISSUE_IDS=$(echo "$PR_BODY" | grep -oE '[A-Z]+-[0-9]+' | sort -u)
+LINEAR_CONTEXT=""
+
+if [[ -n "$ISSUE_IDS" ]]; then
+    litany "Linked issues: $(echo "$ISSUE_IDS" | tr '\n' ' ')"
+fi
+
+if [[ -n "$ISSUE_IDS" && -n "${LINEAR_API_KEY:-}" ]]; then
+    QUERY='query IssueById($id: String!) {
+  issue(id: $id) {
+    identifier
+    title
+    description
+    parent {
+      identifier
+      title
+      description
+    }
+    project {
+      name
+      description
+    }
+  }
+}'
+
+    while IFS= read -r ISSUE_ID; do
+        litany "Fetching Linear context for ${ISSUE_ID}..."
+
+        RESPONSE=$(curl -s -X POST \
+            -H "Authorization: ${LINEAR_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --data "$(jq -n --arg q "$QUERY" --arg id "$ISSUE_ID" '{query: $q, variables: {id: $id}}')" \
+            "https://api.linear.app/graphql")
+
+        ISSUE_TITLE=$(echo "$RESPONSE" | jq -r '.data.issue.title // empty')
+        [[ -z "$ISSUE_TITLE" ]] && continue
+
+        ISSUE_DESC=$(echo "$RESPONSE" | jq -r '.data.issue.description // "No description."')
+        PARENT_TITLE=$(echo "$RESPONSE" | jq -r '.data.issue.parent.title // empty')
+        PROJECT_NAME=$(echo "$RESPONSE" | jq -r '.data.issue.project.name // empty')
+
+        LINEAR_CONTEXT+="
+--- Linear Issue: ${ISSUE_ID} ---
+Title: ${ISSUE_TITLE}
+Description: ${ISSUE_DESC}"
+        [[ -n "$PARENT_TITLE" ]] && LINEAR_CONTEXT+="
+Parent Issue: ${PARENT_TITLE}"
+        [[ -n "$PROJECT_NAME" ]] && LINEAR_CONTEXT+="
+Project: ${PROJECT_NAME}"
+        LINEAR_CONTEXT+="
+"
+        blessed "${ISSUE_ID}: ${ISSUE_TITLE}"
+    done <<< "$ISSUE_IDS"
+elif [[ -n "$ISSUE_IDS" && -z "${LINEAR_API_KEY:-}" ]]; then
+    warning "Linear issue(s) detected (${ISSUE_IDS//$'\n'/, }) but LINEAR_API_KEY not set — skipping."
+else
+    warning "No Linear issues detected in PR body."
+fi
+
+# ── Rite III: Consecration of the Review Reliquary ────────────────────────────
+rite "III — Consecration of the Review Reliquary"
+
+litany "Fetching latest from origin..."
+git -C "$REPO" fetch origin >/dev/null 2>&1
 
 WORKTREES_DIR="${REPO}/.worktrees"
 WORKTREE_NAME="review-$(echo "$BRANCH" | tr '/' '-')"
@@ -75,17 +160,16 @@ if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     exit 0
 fi
 
-# ── Rite I: Consecration of the Review Reliquary ───────────────────────────────
-rite "I — Consecration of the Review Reliquary"
-litany "Branch: ${BRANCH}"
-
 mkdir -p "$WORKTREES_DIR"
 
 if [[ -d "$WORKTREE_PATH" ]]; then
-    warning "Reliquary already exists — the Machine Spirit preserves prior proceedings."
+    litany "Reliquary exists — refreshing to latest origin/${BRANCH}..."
+    git -C "$WORKTREE_PATH" checkout "$BRANCH" >/dev/null 2>&1 || true
+    git -C "$WORKTREE_PATH" reset --hard "origin/${BRANCH}" >/dev/null 2>&1
+    blessed "Reliquary refreshed."
 else
     cd "$REPO"
-    git worktree add "$WORKTREE_PATH" "$BRANCH" >/dev/null 2>&1 \
+    git worktree add "$WORKTREE_PATH" "origin/${BRANCH}" >/dev/null 2>&1 \
         || heresy "Failed to consecrate review worktree for '${BRANCH}'."
     blessed "Review reliquary sanctified at ${WORKTREE_PATH}"
 fi
@@ -96,30 +180,39 @@ if [[ -f "${REPO}/.env" && ! -e "${WORKTREE_PATH}/.env" ]]; then
     litany ".env linked."
 fi
 
-# ── Rite II: Assembling the Tribunal ───────────────────────────────────────────
-rite "II — Assembling the Tribunal"
+# ── Rite IV: Assembling the Tribunal ──────────────────────────────────────────
+rite "IV — Assembling the Tribunal"
 litany "Convening tmux tribunal: ${SESSION_NAME}"
 
-REVIEW_PROMPT="You are a senior engineer conducting a code review of the branch \`${BRANCH}\`.
+REVIEW_PROMPT="You are a senior engineer conducting a code review of PR #${PR_NUMBER}: ${PR_TITLE}.
+
+PR URL: ${PR_URL}
+Branch: ${BRANCH}
+Worktree: ${WORKTREE_PATH}
 
 Begin by orienting yourself:
   git log main...HEAD --oneline     # commits in this branch
-  git diff main...HEAD              # full changeset
+  git diff main...HEAD              # full changeset"
 
+if [[ -n "$LINEAR_CONTEXT" ]]; then
+    REVIEW_PROMPT+="
+
+The following Linear issue(s) are linked to this PR and provide context for the intended changes:
+${LINEAR_CONTEXT}"
+fi
+
+REVIEW_PROMPT+="
 Focus your review on:
 1. **Interfaces** — API contracts, function signatures, data model changes. Are they clean, consistent, and backward-compatible?
 2. **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
 3. **Ripple effects** — What does this change affect beyond the obvious? Consider: database migrations, caching behaviour, permissions, background tasks, serialization, and frontend contracts.
 4. **Best practices** — Reference the project style guides and existing patterns. Call out deviations.
 
-Be direct and specific. Note both issues and things done well. Your verdict determines whether this branch will be integrated into the codebase.
-
-Worktree: ${WORKTREE_PATH}
-Branch: ${BRANCH}"
+Be direct and specific. Note both issues and things done well. Your verdict determines whether this branch will be integrated into the codebase."
 
 # Pass the prompt via env var to avoid tmux send-keys buffer limits and quoting issues
 tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH" -e "SANCTION_PROMPT=${REVIEW_PROMPT}"
-tmux rename-window -t "${SESSION_NAME}:0" "review: ${BRANCH}"
+tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 
 # Left pane (40%): claude reviewer
 # Right pane (60%): nvim in worktree root

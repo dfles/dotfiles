@@ -17,6 +17,7 @@ return {
       { "<leader>gt", "<Plug>(git-conflict-theirs)", desc = "Conflict: Keep incoming" },
       { "<leader>gb", "<Plug>(git-conflict-both)", desc = "Conflict: Keep both" },
       { "<leader>gx", "<Plug>(git-conflict-none)", desc = "Conflict: Remove conflict" },
+      { "<leader>gc", "<cmd>GitConflictListQf<CR>", desc = "Conflicts to quickfix" },
     },
   },
   {

@@ -41,8 +41,16 @@ echo -e "${BOLD}${CYAN}  ╚═════════════════�
 echo ""
 
 # ── Validate ───────────────────────────────────────────────────────────────────
-PR_NUMBER="${1:-}"
-[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction <PR-NUMBER>"
+PR_NUMBER=""
+DEPTH=""
+for arg in "$@"; do
+    case "$arg" in
+        --depth=*) DEPTH="${arg#--depth=}" ;;
+        *)         PR_NUMBER="$arg" ;;
+    esac
+done
+
+[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction [--depth=N] <PR-NUMBER>"
 
 for cmd in tmux nvim git gh claude jq; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -208,9 +216,17 @@ PR URL: ${PR_URL}
 Branch: ${BRANCH}
 Worktree: ${WORKTREE_PATH}
 
-Begin by orienting yourself:
+Begin by orienting yourself:"
+
+if [[ -n "$DEPTH" ]]; then
+    REVIEW_PROMPT+="
+  git log -${DEPTH} --oneline       # last ${DEPTH} commit(s) in this branch
+  git diff HEAD~${DEPTH}...HEAD     # changeset for the last ${DEPTH} commit(s)"
+else
+    REVIEW_PROMPT+="
   git log main...HEAD --oneline     # commits in this branch
   git diff main...HEAD              # full changeset"
+fi
 
 if [[ -n "$LINEAR_CONTEXT" ]]; then
     REVIEW_PROMPT+="

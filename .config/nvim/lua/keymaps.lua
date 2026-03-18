@@ -15,6 +15,11 @@ vim.keymap.set("n", "<leader>bo", "<cmd>%bd|e#<cr>", { desc = "Delete other buff
 -- Delete current buffer without closing window
 vim.keymap.set("n", "<leader>bd", "<cmd>bp<bar>sp<bar>bn<bar>bd<cr>", { desc = "Delete current buffer" })
 vim.keymap.set("n", "<leader>bl", "<cmd>checkhealth lsp<cr>", { desc = "LSP info" })
+vim.keymap.set("n", "<leader>bF", function()
+  vim.b.disable_autoformat = not vim.b.disable_autoformat
+  local state = vim.b.disable_autoformat and "disabled" or "enabled"
+  vim.notify("Autoformat " .. state .. " for buffer")
+end, { desc = "Toggle autoformat" })
 
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
 vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })

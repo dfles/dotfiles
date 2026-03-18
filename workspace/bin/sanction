@@ -65,17 +65,55 @@ rite "I — Interrogation of the Pull Request"
 litany "Querying GitHub for PR #${PR_NUMBER}..."
 
 cd "$REPO"
-PR_JSON=$(gh pr view "$PR_NUMBER" --json headRefName,title,body,url 2>/dev/null) \
+PR_JSON=$(gh pr view "$PR_NUMBER" --json headRefName,title,body,url,commits,comments,reviews 2>/dev/null) \
     || heresy "PR #${PR_NUMBER} not found. Verify the number and your gh authentication."
 
 BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
 PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
 PR_BODY=$(echo "$PR_JSON" | jq -r '.body')
 PR_URL=$(echo "$PR_JSON" | jq -r '.url')
+COMMIT_COUNT=$(echo "$PR_JSON" | jq '.commits | length')
+COMMIT_LOG=$(echo "$PR_JSON" | jq -r '.commits[] | "  \(.oid[0:7]) \(.messageHeadline)"')
 
 blessed "PR #${PR_NUMBER}: ${PR_TITLE}"
 litany "Branch: ${BRANCH}"
 litany "URL: ${PR_URL}"
+litany "${COMMIT_COUNT} commit(s)"
+
+# Collect PR discussion for review context
+CONV_COMMENTS=$(echo "$PR_JSON" | jq -r '
+  .comments[] |
+  "[\(.author.login) — \(.createdAt[0:10])]:\n\(.body)"
+' 2>/dev/null || true)
+
+REVIEW_BODIES=$(echo "$PR_JSON" | jq -r '
+  .reviews[] | select(.body != "") |
+  "[\(.author.login) — \(.state | ascii_downcase) — \(.createdAt[0:10])]:\n\(.body)"
+' 2>/dev/null || true)
+
+INLINE_COMMENTS=$(gh api "repos/{owner}/{repo}/pulls/${PR_NUMBER}/comments" --paginate \
+    --jq '.[] | "[\(.user.login) on \(.path):\(.line // .original_line // "general")]:\n\(.body)"' \
+    2>/dev/null || true)
+
+PR_DISCUSSION=""
+[[ -n "$CONV_COMMENTS" ]] && PR_DISCUSSION+="
+--- Conversation ---
+${CONV_COMMENTS}
+"
+[[ -n "$REVIEW_BODIES" ]] && PR_DISCUSSION+="
+--- Reviews ---
+${REVIEW_BODIES}
+"
+[[ -n "$INLINE_COMMENTS" ]] && PR_DISCUSSION+="
+--- Inline Review Comments ---
+${INLINE_COMMENTS}
+"
+
+if [[ -n "$PR_DISCUSSION" ]]; then
+    litany "PR discussion collected."
+else
+    litany "No discussion yet."
+fi
 
 # ── Rite II: Communion with Linear (if linked) ────────────────────────────────
 rite "II — Communion with Linear"
@@ -217,15 +255,16 @@ PR URL: ${PR_URL}
 Branch: ${BRANCH}
 Worktree: ${WORKTREE_PATH}
 
-Begin by orienting yourself:"
+Commits in this PR (${COMMIT_COUNT}):
+${COMMIT_LOG}
+
+Begin by reviewing the changeset:"
 
 if [[ -n "$DEPTH" ]]; then
     REVIEW_PROMPT+="
-  git log -${DEPTH} --oneline       # last ${DEPTH} commit(s) in this branch
-  git diff HEAD~${DEPTH}...HEAD     # changeset for the last ${DEPTH} commit(s)"
+  git diff HEAD~${DEPTH}...HEAD     # last ${DEPTH} commit(s)"
 else
     REVIEW_PROMPT+="
-  git log main...HEAD --oneline     # commits in this branch
   git diff main...HEAD              # full changeset"
 fi
 
@@ -234,6 +273,13 @@ if [[ -n "$LINEAR_CONTEXT" ]]; then
 
 The following Linear issue(s) are linked to this PR and provide context for the intended changes:
 ${LINEAR_CONTEXT}"
+fi
+
+if [[ -n "$PR_DISCUSSION" ]]; then
+    REVIEW_PROMPT+="
+
+The following discussion has already taken place on this PR. Use it to understand the author's intent and see what other engineers have already flagged:
+${PR_DISCUSSION}"
 fi
 
 REVIEW_PROMPT+="

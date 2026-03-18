@@ -148,9 +148,10 @@ rite "III — Consecration of the Review Reliquary"
 
 litany "Fetching latest from origin..."
 git -C "$REPO" fetch origin >/dev/null 2>&1
+git -C "$REPO" fetch origin "$BRANCH" >/dev/null 2>&1 || true
 
 WORKTREES_DIR="${REPO}/.worktrees"
-WORKTREE_NAME="review-$(echo "$BRANCH" | tr '/' '-')"
+WORKTREE_NAME="review-$(echo "$BRANCH" | tr '/' '-' | tr '.' '-')"
 WORKTREE_PATH="${WORKTREES_DIR}/${WORKTREE_NAME}"
 SESSION_NAME="$WORKTREE_NAME"
 

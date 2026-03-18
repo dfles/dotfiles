@@ -61,7 +61,7 @@ if [[ -z "$TARGET" ]]; then
         heresy "Current session '${CURRENT_SESSION}' does not appear to be a cogitate or sanction session."
     fi
 else
-    SANITIZED=$(echo "$TARGET" | tr '[:upper:]' '[:lower:]' | tr '/' '-')
+    SANITIZED=$(echo "$TARGET" | tr '[:upper:]' '[:lower:]' | tr '/' '-' | tr '.' '-')
 
     # Resolve which session(s) exist — issue workflow, review workflow, or both
     CANDIDATES=()

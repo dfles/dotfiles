@@ -284,9 +284,10 @@ fi
 
 REVIEW_PROMPT+="
 Focus your review on:
-1. **Interfaces** — API contracts, function signatures, data model changes. Are they clean, consistent, and backward-compatible?
-2. **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
-3. **Ripple effects** — What does this change affect beyond the obvious? Consider: database migrations, caching behaviour, permissions, background tasks, serialization, and frontend contracts.
+1. **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
+2. **Ripple effects** — What does this change affect beyond the obvious? Consider: database migrations, caching behaviour, permissions, background tasks, serialization, and frontend contracts.
+3. **Alternatives** — Did the author try/explore any alternatives? Is there a simpler alternative they might not have tried. Can we leverage existing work or patterns to make this change more consistent with our codebase?
+3. **Interfaces** — API contracts, function signatures, data model changes. Are they clean, consistent, and backward-compatible?
 4. **Best practices** — Reference the project style guides and existing patterns. Call out deviations.
 
 Be direct and specific. Note both issues and things done well. Your verdict determines whether this branch will be integrated into the codebase."

@@ -293,14 +293,17 @@ Focus your review on:
 
 Be direct and specific. Note both issues and things done well. Your verdict determines whether this branch will be integrated into the codebase."
 
-# Pass the prompt via env var to avoid tmux send-keys buffer limits and quoting issues
-tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH" -e "SANCTION_PROMPT=${REVIEW_PROMPT}"
+# Write prompt to file — avoids OS arg length limits and tmux buffer issues
+PROMPT_FILE="${WORKTREE_PATH}/.sanction-prompt"
+printf '%s' "$REVIEW_PROMPT" > "$PROMPT_FILE"
+
+tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
 tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 
 # Left pane (40%): claude reviewer
 # Right pane (60%): nvim in worktree root
 tmux split-window -h -p 60 -t "${SESSION_NAME}:0" -c "$WORKTREE_PATH"
-tmux send-keys -t "${SESSION_NAME}:0.0" 'claude --append-system-prompt "$SANCTION_PROMPT" "Begin the review."' Enter
+tmux send-keys -t "${SESSION_NAME}:0.0" "claude --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" 'Begin the review.'" Enter
 tmux send-keys -t "${SESSION_NAME}:0.1" "activate && nvim ." Enter
 tmux select-pane -t "${SESSION_NAME}:0.0"
 

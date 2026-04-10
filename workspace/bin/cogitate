@@ -40,16 +40,18 @@ echo ""
 # ── Validate ───────────────────────────────────────────────────────────────────
 NO_CLAUDE=false
 LINK_DEPS=true
+TARGET_BRANCH=""
 ISSUE_ID=""
 for arg in "$@"; do
     case "$arg" in
         --no-claude)    NO_CLAUDE=true ;;
         --no-link-deps) LINK_DEPS=false ;;
+        --target=*)     TARGET_BRANCH="${arg#--target=}" ;;
         *)              ISSUE_ID="$arg" ;;
     esac
 done
 
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] <ISSUE-ID>"
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] [--target=<branch>] <ISSUE-ID>"
 
 for cmd in curl jq git claude; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -131,7 +133,13 @@ if [[ -d "$WORKTREE_PATH" ]]; then
     warning "Reliquary already exists — the Machine Spirit preserves prior work."
 else
     cd "$REPO"
-    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" >/dev/null 2>&1 \
+    litany "Fetching latest from origin..."
+    git fetch origin >/dev/null 2>&1
+
+    START_POINT="origin/${TARGET_BRANCH:-main}"
+    litany "Branching from ${START_POINT}"
+
+    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" "$START_POINT" >/dev/null 2>&1 \
         || git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" >/dev/null 2>&1 \
         || heresy "Failed to consecrate worktree. The branch '${BRANCH_NAME}' may already exist elsewhere."
     blessed "Worktree sanctified at ${WORKTREE_PATH}"

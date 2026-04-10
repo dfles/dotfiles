@@ -65,10 +65,11 @@ rite "I — Interrogation of the Pull Request"
 litany "Querying GitHub for PR #${PR_NUMBER}..."
 
 cd "$REPO"
-PR_JSON=$(gh pr view "$PR_NUMBER" --json headRefName,title,body,url,commits,comments,reviews 2>/dev/null) \
+PR_JSON=$(gh pr view "$PR_NUMBER" --json headRefName,baseRefName,title,body,url,commits,comments,reviews 2>/dev/null) \
     || heresy "PR #${PR_NUMBER} not found. Verify the number and your gh authentication."
 
 BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
+BASE_BRANCH=$(echo "$PR_JSON" | jq -r '.baseRefName')
 PR_TITLE=$(echo "$PR_JSON" | jq -r '.title')
 PR_BODY=$(echo "$PR_JSON" | jq -r '.body')
 PR_URL=$(echo "$PR_JSON" | jq -r '.url')
@@ -76,7 +77,7 @@ COMMIT_COUNT=$(echo "$PR_JSON" | jq '.commits | length')
 COMMIT_LOG=$(echo "$PR_JSON" | jq -r '.commits[] | "  \(.oid[0:7]) \(.messageHeadline)"')
 
 blessed "PR #${PR_NUMBER}: ${PR_TITLE}"
-litany "Branch: ${BRANCH}"
+litany "Branch: ${BRANCH} → ${BASE_BRANCH}"
 litany "URL: ${PR_URL}"
 litany "${COMMIT_COUNT} commit(s)"
 
@@ -265,7 +266,7 @@ if [[ -n "$DEPTH" ]]; then
   git diff HEAD~${DEPTH}...HEAD     # last ${DEPTH} commit(s)"
 else
     REVIEW_PROMPT+="
-  git diff main...HEAD              # full changeset"
+  git diff origin/${BASE_BRANCH}...HEAD       # full changeset"
 fi
 
 if [[ -n "$LINEAR_CONTEXT" ]]; then

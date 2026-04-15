@@ -40,3 +40,8 @@ end, { desc = "Toggle inlay hints" })
 vim.keymap.set("n", "<leader>un", function()
   vim.o.relativenumber = not vim.o.relativenumber
 end, { desc = "Toggle relative line numbers" })
+
+vim.keymap.set("n", "<leader>uw", function()
+  vim.wo.wrap = not vim.wo.wrap
+  vim.wo.linebreak = vim.wo.wrap
+end, { desc = "Toggle word wrap" })

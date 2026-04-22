@@ -22,6 +22,23 @@ return {
         lint.linters.ruff.cmd = venv .. "/bin/ruff"
       end
 
+      -- mypy's default parser requires a trailing [error-code], which
+      -- reveal_type / note lines lack, so they get dropped.
+      local parser = require("lint.parser")
+      local note_parser = parser.from_pattern(
+        "([^:]+):(%d+):(%d+):(%d+):(%d+): (note): (.*)",
+        { "file", "lnum", "col", "end_lnum", "end_col", "severity", "message" },
+        { note = vim.diagnostic.severity.HINT },
+        { source = "mypy" },
+        { end_col_offset = 0 }
+      )
+      local default_parser = lint.linters.mypy.parser
+      lint.linters.mypy.parser = function(output, bufnr, linter_cwd)
+        local diags = default_parser(output, bufnr, linter_cwd)
+        vim.list_extend(diags, note_parser(output, bufnr, linter_cwd))
+        return diags
+      end
+
       -- Create autocommand to trigger linting
       vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
         group = vim.api.nvim_create_augroup("nvim-lint", { clear = true }),

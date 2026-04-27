@@ -33,6 +33,25 @@ local function file_exists(filename)
   end
 end
 
+local function enclosing_qualname()
+  local ok, node = pcall(vim.treesitter.get_node)
+  if not ok or not node then
+    return ""
+  end
+  local parts = {}
+  while node do
+    local t = node:type()
+    if t == "class_definition" or t == "function_definition" then
+      local name = node:field("name")[1]
+      if name then
+        table.insert(parts, 1, vim.treesitter.get_node_text(name, 0))
+      end
+    end
+    node = node:parent()
+  end
+  return table.concat(parts, ".")
+end
+
 local debug_configs = {
   {
     type = "python",
@@ -40,6 +59,8 @@ local debug_configs = {
     name = "Django Test",
     program = "${workspaceFolder}/backend/manage.py",
     args = function()
+      local dap = require("dap")
+
       -- Extract the part after "backend/"
       local guessed_path = vim.fn.expand("%:p:r"):match("backend/(.+)")
       if guessed_path then
@@ -48,9 +69,20 @@ local debug_configs = {
         guessed_path = ""
       end
 
-      local test_path = vim.fn.input("Test file (e.g. app.test_jedi): ", guessed_path)
-      if test_path == nil or test_path == "" then
-        error("No test path provided")
+      local qualname = enclosing_qualname()
+      local default_path = guessed_path
+      if guessed_path ~= "" and qualname ~= "" then
+        default_path = guessed_path .. "." .. qualname
+      end
+
+      local cancelled = "\0"
+      local test_path = vim.fn.input({
+        prompt = "Test file (e.g. app.test_jedi): ",
+        default = default_path,
+        cancelreturn = cancelled,
+      })
+      if test_path == cancelled or test_path == "" then
+        return dap.ABORT
       end
 
       -- Check if there's a testsettings file we should include

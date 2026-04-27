@@ -15,6 +15,16 @@ vim.keymap.set("n", "<leader>bo", "<cmd>%bd|e#<cr>", { desc = "Delete other buff
 -- Delete current buffer without closing window
 vim.keymap.set("n", "<leader>bd", "<cmd>bp<bar>sp<bar>bn<bar>bd<cr>", { desc = "Delete current buffer" })
 vim.keymap.set("n", "<leader>bl", "<cmd>checkhealth lsp<cr>", { desc = "LSP info" })
+vim.keymap.set("n", "<leader>bL", function()
+  local clients = vim.lsp.get_clients({ bufnr = 0 })
+  for _, client in ipairs(clients) do
+    vim.lsp.stop_client(client.id)
+  end
+  vim.cmd("edit")
+  vim.notify("Restarted LSP: " .. (#clients > 0 and table.concat(
+    vim.tbl_map(function(c) return c.name end, clients), ", "
+  ) or "no clients were attached"))
+end, { desc = "Restart LSP for buffer" })
 vim.keymap.set("n", "<leader>bF", function()
   vim.b.disable_autoformat = not vim.b.disable_autoformat
   local state = vim.b.disable_autoformat and "disabled" or "enabled"

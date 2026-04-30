@@ -4,3 +4,4 @@ ideas*
 .claude
 .claude-plans
 .worktrees
+.env.remote

@@ -314,8 +314,6 @@ The following are MY pending (unsubmitted) review comments — drafts I have wri
 - Is the suggested fix the right one, or is there a better approach?
 - Have I missed a related issue nearby that the same comment should cover?
 
-Report on these drafts in a separate '## Pending review draft feedback' section at the very top of your output, before the Critical/Interface/Other sections. Reference each draft by its file:line. If a draft is wrong, say so plainly.
-
 ${PENDING_REVIEW_COMMENTS}"
 fi
 
@@ -324,32 +322,69 @@ Do not run tests, linters, type checkers, or formatters — CI already reports t
 
 Examine the change for:
 - **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
-- **Ripple effects** — What does this change affect beyond the obvious? Consider: database migrations, caching behaviour, permissions, background tasks, serialization, and frontend contracts.
-- **Encapsulation** — Is the implementation in the correct package/layer/module/class. Do we expose unnecessary complexity to callers or force callers to understand the internals/nuance of package/modules they consume.
-- **Interfaces** — API contracts, function signatures, data model changes. Are they clean, consistent, and backward-compatible?
-- **Alternatives** — Did the author try/explore any alternatives? Is there a simpler alternative they might not have tried. Can we leverage existing work or patterns to make this change more consistent with our codebase?
+- **Ripple effects** — What does this change affect beyond the obvious? Database migrations, caching, permissions, background tasks, serialization, frontend contracts.
+- **Encapsulation** — Is the implementation in the right package/layer/module/class? Does it expose unnecessary complexity to callers or force them to understand internals?
+- **Interfaces** — API contracts, function signatures, data model changes. Clean, consistent, backward-compatible?
+- **Alternatives** — Did the author try alternatives? Is there a simpler approach? Can existing patterns or work be reused?
 - **Best practices** — Reference the project style guides and existing patterns. Call out deviations.
 
-Output format — produce a single numbered list of actionable feedback, grouped under these headings in this order:
+## Output
 
-  ## Critical (bugs, correctness, ripple effects)
-  ## Interface, style, and best practices
-  ## Other
+You produce two artifacts.
 
-Numbering is continuous across all sections (1, 2, 3, …) so each item can be referenced by number. Every item must start with \`file/path.ext:LINE\` (or a line range like \`file.ext:120-145\`) followed by a one-line summary, then any necessary detail. Be direct and specific. Do not include a 'what was done well' section or any positive commentary — only feedback the author should act on. If a section has no items, omit it."
+**1. Detailed review** — write to \`.sanction-review.md\` in the worktree using the Write tool. This is the canonical document the reviewer reads in their editor.
+
+Structure:
+- If pending review drafts were provided above, start the file with a \`## Pending review draft feedback\` section. Reference each draft by file:line, same item shape as below. If a draft is wrong, say so plainly.
+- Then severity bands as headings: \`## High\`, \`## Medium\`, \`## Low\`. Omit empty bands.
+- Within each band, group items by file path.
+- Number continuously across the entire file (1, 2, 3, …) so items can be referenced by number.
+
+Each item uses exactly this shape — no extra prose, no preamble, no positive commentary:
+
+\`\`\`
+### N. file/path.ext:LINE — [severity] one-line summary
+
+**Why:** 1–2 sentences on the actual problem.
+**Fix:** the concrete change to make, or \"n/a\" if reporting only.
+\`\`\`
+
+Rules:
+- Summary line ≤15 words.
+- Banned hedging — do not write \"consider\", \"perhaps\", \"might want to\", \"could potentially\", \"it would be worth\", \"you may want to\", \"I'd suggest\", \"if you have time\". State the issue and the fix directly.
+- No \"what was done well\" section. Only feedback the author should act on.
+- Line references use \`file.ext:LINE\` or a range like \`file.ext:120-145\`.
+
+**2. Chat index** — your final message in this chat session contains only:
+
+- One line confirming \`.sanction-review.md\` was written.
+- The terse index, one line per item, in the same order as the file:
+  \`N. file:line [severity] summary\`
+- A final line: \"Ask to expand any item by number for more detail or alternatives.\"
+
+Do not paste full findings into chat — the reviewer reads the markdown file in their editor.
+
+When the reviewer asks to expand an item by number, give a focused follow-up: deeper explanation of why, alternative approaches, or related code affected by the same fix. Do not re-paste the index."
 
 # Write prompt to file — avoids OS arg length limits and tmux buffer issues
 PROMPT_FILE="${WORKTREE_PATH}/.sanction-prompt"
 printf '%s' "$REVIEW_PROMPT" > "$PROMPT_FILE"
 
+# Pre-create the review file so nvim has something to open; Claude overwrites it.
+REVIEW_FILE="${WORKTREE_PATH}/.sanction-review.md"
+: > "$REVIEW_FILE"
+
 tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
 tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 
-# Left pane (40%): claude reviewer
-# Right pane (60%): nvim in worktree root
-tmux split-window -h -p 60 -t "${SESSION_NAME}:0" -c "$WORKTREE_PATH"
-tmux send-keys -t "${SESSION_NAME}:0.0" "claude --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" 'Begin the review.'" Enter
-tmux send-keys -t "${SESSION_NAME}:0.1" "activate && nvim ." Enter
+# Layout: claude reviewer (~30%) | review.md in nvim (~30%) | code in nvim (~40%)
+tmux split-window -h -p 70 -t "${SESSION_NAME}:0.0" -c "$WORKTREE_PATH"
+tmux split-window -h -p 57 -t "${SESSION_NAME}:0.1" -c "$WORKTREE_PATH"
+
+tmux send-keys -t "${SESSION_NAME}:0.0" "claude --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" 'Begin the review.'" Enter
+# Auto-reload review.md when Claude rewrites it from outside the editor.
+tmux send-keys -t "${SESSION_NAME}:0.1" "nvim -c 'set autoread' -c 'autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * silent! checktime' .sanction-review.md" Enter
+tmux send-keys -t "${SESSION_NAME}:0.2" "activate && nvim ." Enter
 tmux select-pane -t "${SESSION_NAME}:0.0"
 
 # Window 1: terminal in the worktree

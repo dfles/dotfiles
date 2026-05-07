@@ -273,22 +273,26 @@ fi
 rite "IV — Assembling the Tribunal"
 litany "Convening tmux tribunal: ${SESSION_NAME}"
 
-REVIEW_PROMPT="You are a senior engineer conducting a code review of PR #${PR_NUMBER}: ${PR_TITLE}.
+REVIEW_PROMPT="You are conducting a code review of PR #${PR_NUMBER}: ${PR_TITLE}.
 
 PR URL: ${PR_URL}
-Branch: ${BRANCH}
+Branch: ${BRANCH} → ${BASE_BRANCH}
 Worktree: ${WORKTREE_PATH}
 
 Commits in this PR (${COMMIT_COUNT}):
 ${COMMIT_LOG}
 
-Begin by reviewing the changeset:"
+The /sanction skill defines the review methodology and output format. Apply it. The data below replaces the skill's 'Gather context' step — do not re-fetch."
 
 if [[ -n "$DEPTH" ]]; then
     REVIEW_PROMPT+="
+
+Read the changeset with:
   git diff HEAD~${DEPTH}...HEAD     # last ${DEPTH} commit(s)"
 else
     REVIEW_PROMPT+="
+
+Read the changeset with:
   git diff origin/${BASE_BRANCH}...HEAD       # full changeset"
 fi
 
@@ -309,62 +313,10 @@ fi
 if [[ -n "$PENDING_REVIEW_COMMENTS" ]]; then
     REVIEW_PROMPT+="
 
-The following are MY pending (unsubmitted) review comments — drafts I have written but not yet posted. Before producing your own findings, examine each one against the actual code and assess:
-- Is the claim correct? Could it be tightened, broadened, or rephrased to be clearer?
-- Is the suggested fix the right one, or is there a better approach?
-- Have I missed a related issue nearby that the same comment should cover?
+The following are MY pending (unsubmitted) review comments — drafts I have written but not yet posted. Validate each one per the /sanction skill before producing your own findings:
 
 ${PENDING_REVIEW_COMMENTS}"
 fi
-
-REVIEW_PROMPT+="
-Do not run tests, linters, type checkers, or formatters — CI already reports those on the PR. Focus on what a human reviewer adds beyond CI.
-
-Examine the change for:
-- **Bugs** — Logic errors, edge cases, missing null/error handling, race conditions, off-by-one errors.
-- **Ripple effects** — What does this change affect beyond the obvious? Database migrations, caching, permissions, background tasks, serialization, frontend contracts.
-- **Encapsulation** — Is the implementation in the right package/layer/module/class? Does it expose unnecessary complexity to callers or force them to understand internals?
-- **Interfaces** — API contracts, function signatures, data model changes. Clean, consistent, backward-compatible?
-- **Alternatives** — Did the author try alternatives? Is there a simpler approach? Can existing patterns or work be reused?
-- **Best practices** — Reference the project style guides and existing patterns. Call out deviations.
-
-## Output
-
-You produce two artifacts.
-
-**1. Detailed review** — write to \`.sanction-review.md\` in the worktree using the Write tool. This is the canonical document the reviewer reads in their editor.
-
-Structure:
-- If pending review drafts were provided above, start the file with a \`## Pending review draft feedback\` section. Reference each draft by file:line, same item shape as below. If a draft is wrong, say so plainly.
-- Then severity bands as headings: \`## High\`, \`## Medium\`, \`## Low\`. Omit empty bands.
-- Within each band, group items by file path.
-- Number continuously across the entire file (1, 2, 3, …) so items can be referenced by number.
-
-Each item uses exactly this shape — no extra prose, no preamble, no positive commentary:
-
-\`\`\`
-### N. file/path.ext:LINE — [severity] one-line summary
-
-**Why:** 1–2 sentences on the actual problem.
-**Fix:** the concrete change to make, or \"n/a\" if reporting only.
-\`\`\`
-
-Rules:
-- Summary line ≤15 words.
-- Banned hedging — do not write \"consider\", \"perhaps\", \"might want to\", \"could potentially\", \"it would be worth\", \"you may want to\", \"I'd suggest\", \"if you have time\". State the issue and the fix directly.
-- No \"what was done well\" section. Only feedback the author should act on.
-- Line references use \`file.ext:LINE\` or a range like \`file.ext:120-145\`.
-
-**2. Chat index** — your final message in this chat session contains only:
-
-- One line confirming \`.sanction-review.md\` was written.
-- The terse index, one line per item, in the same order as the file:
-  \`N. file:line [severity] summary\`
-- A final line: \"Ask to expand any item by number for more detail or alternatives.\"
-
-Do not paste full findings into chat — the reviewer reads the markdown file in their editor.
-
-When the reviewer asks to expand an item by number, give a focused follow-up: deeper explanation of why, alternative approaches, or related code affected by the same fix. Do not re-paste the index."
 
 # Write prompt to file — avoids OS arg length limits and tmux buffer issues
 PROMPT_FILE="${WORKTREE_PATH}/.sanction-prompt"
@@ -381,7 +333,7 @@ tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 tmux split-window -h -p 70 -t "${SESSION_NAME}:0.0" -c "$WORKTREE_PATH"
 tmux split-window -h -p 57 -t "${SESSION_NAME}:0.1" -c "$WORKTREE_PATH"
 
-tmux send-keys -t "${SESSION_NAME}:0.0" "claude --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" 'Begin the review.'" Enter
+tmux send-keys -t "${SESSION_NAME}:0.0" "claude --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" '/sanction'" Enter
 # Auto-reload review.md when Claude rewrites it from outside the editor.
 tmux send-keys -t "${SESSION_NAME}:0.1" "nvim -c 'set autoread' -c 'autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * silent! checktime' .sanction-review.md" Enter
 tmux send-keys -t "${SESSION_NAME}:0.2" "activate && nvim ." Enter

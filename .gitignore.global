@@ -1,7 +1,7 @@
 scratch.*
 ideas*
 
-.claude
+.claude/**
 .claude-plans
 .worktrees
 .env.remote

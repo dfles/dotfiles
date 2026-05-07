@@ -185,25 +185,14 @@ else
 
     PLAN_PROMPT="You are a senior engineer working in this codebase (a Django + React educational technology platform).
 
-Your task is to produce an implementation plan for the following Linear issue, then write it to a file called \`RITE_OF_IMPLEMENTATION.md\` in the current directory.
+The /cogitate skill defines the planning methodology and the format of \`RITE_OF_IMPLEMENTATION.md\`. Apply it. The Linear issue data below replaces the skill's 'Fetch the issue' step — do not re-fetch.
 
 ---
 **Issue:** ${ISSUE_ID} — ${ISSUE_TITLE}
 
 ${CONTEXT_BLOCK}**Description:**
 ${ISSUE_DESC}
----
-
-Before writing the plan, explore the relevant areas of the codebase to understand the existing patterns and context.
-
-The plan file must contain these sections:
-1. **Overview** — What needs to be done and why (2-4 sentences)
-2. **Codebase Areas** — Relevant files, modules, apps, or components
-3. **Implementation Steps** — Ordered, specific steps with enough detail to act on
-4. **Testing Approach** — How to verify the implementation is correct
-5. **Open Questions / Risks** — Anything needing clarification before work begins
-
-Write only the plan. The engineer will review it before implementation starts."
+---"
 
     cd "$WORKTREE_PATH"
     if [[ "$NO_CLAUDE" == true ]]; then

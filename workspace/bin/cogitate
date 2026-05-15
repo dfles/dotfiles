@@ -139,7 +139,7 @@ else
     START_POINT="origin/${TARGET_BRANCH:-main}"
     litany "Branching from ${START_POINT}"
 
-    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME" "$START_POINT" >/dev/null 2>&1 \
+    git worktree add --no-track "$WORKTREE_PATH" -b "$BRANCH_NAME" "$START_POINT" >/dev/null 2>&1 \
         || git worktree add "$WORKTREE_PATH" "$BRANCH_NAME" >/dev/null 2>&1 \
         || heresy "Failed to consecrate worktree. The branch '${BRANCH_NAME}' may already exist elsewhere."
     blessed "Worktree sanctified at ${WORKTREE_PATH}"

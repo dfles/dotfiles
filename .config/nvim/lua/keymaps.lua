@@ -10,8 +10,8 @@ end
 vim.keymap.set("n", "<leader>by", ":let @+=expand('%:.')<cr>", { desc = "Yank relative path" })
 vim.keymap.set("n", "<leader>bY", ":let @+=@%<cr>", { desc = "Yank absolute path" })
 
-vim.keymap.set("n", "<leader>ba", "<cmd>%bd<cr>", { desc = "Delete all buffers" })
 vim.keymap.set("n", "<leader>bo", "<cmd>%bd|e#<cr>", { desc = "Delete other buffers" })
+vim.keymap.set("n", "<leader>bD", "<cmd>%bd<cr>", { desc = "Delete all buffers" })
 -- Delete current buffer without closing window
 vim.keymap.set("n", "<leader>bd", "<cmd>bp<bar>sp<bar>bn<bar>bd<cr>", { desc = "Delete current buffer" })
 vim.keymap.set("n", "<leader>bl", "<cmd>checkhealth lsp<cr>", { desc = "LSP info" })

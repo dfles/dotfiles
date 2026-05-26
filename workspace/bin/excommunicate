@@ -100,8 +100,12 @@ for SESSION_NAME in "${CANDIDATES[@]}"; do
         BRANCH_NAME=$(basename "$WORKTREE_PATH")
         litany "Removing worktree: ${WORKTREE_PATH}"
         cd "$REPO"
-        git worktree remove "$WORKTREE_PATH" --force 2>/dev/null || true
         git worktree prune 2>/dev/null || true
+        if ! git worktree remove "$WORKTREE_PATH" --force 2>/dev/null; then
+            litany "git worktree remove declined (likely stale admin record) — falling back to rm -rf"
+            rm -rf "$WORKTREE_PATH"
+        fi
+        [[ -d "$WORKTREE_PATH" ]] && heresy "Failed to excise worktree at ${WORKTREE_PATH}"
         blessed "Worktree excised."
 
         # ── Rite III: Optionally Delete the Branch ───────────────────────────

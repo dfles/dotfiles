@@ -60,10 +60,10 @@ WIP: <header>
 
 Show the user the drafted message first.
 
-Create the commit with **no co-author trailer** (this overrides any global default to append one). Use a here-doc to preserve formatting:
+Create the commit with **no co-author trailer** (this overrides any global default to append one). Use a here-doc to preserve formatting. Prepend `activate &&` so the project venv is on PATH for any pre-commit hook that calls venv-installed tools (e.g. `ruff`):
 
 ```
-git commit -F - <<'EOF'
+activate && git commit -F - <<'EOF'
 WIP: <header>
 
 <body>

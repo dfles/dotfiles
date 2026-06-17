@@ -38,12 +38,13 @@ The skeleton has four required parts:
 Add these conditional sections **only when the commits actually warrant them**:
 
 - **`## Behavior changes`** — when something externally observable shifts (API shape, semantics under a flag/config, perf characteristics that callers care about). One bullet per change; mention what's unchanged if it's load-bearing for confidence.
-- **`## Follow-ups`** or **`## Affects upcoming work`** — when commits explicitly hand off to a follow-up ticket. Reference issue IDs.
+- **`## Follow-ups`** or **`## Affects upcoming work`** — when commits explicitly hand off deferred work or scope. Reference issue IDs, but only for follow-ups that carry real context (work intentionally cut, a known gap, a dependency that shapes review). Do **not** add bullets that merely note another issue is now unblocked — that belongs in the issue tracker, not the PR.
 
 Tone:
 - Tight. Focus on *why* and *impact*, not *how*.
 - Write for a reviewer who didn't see the conversation that produced this work.
 - No emojis. No "this PR" filler. No restating the commit subject as a bullet.
+- Don't restate what GitHub's own UI already shows — target/base branch, labels, commit list, file counts. No standalone "reviewer notes" section for this.
 
 ## 4. Write the file
 

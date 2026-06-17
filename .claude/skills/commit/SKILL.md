@@ -39,11 +39,17 @@ Format:
 WIP: <header>
 
 <body>
+
+<ISSUE-ID>
 ```
 
-**Header** — a single line describing the commit, kept short enough to display in full on GitHub without truncation (aim for ~50 chars, hard limit ~72). The `WIP: ` prefix is *not* counted against this limit — write the header to fit the limit, then prepend `WIP: `. Use the imperative mood and lead with the *why* or the outcome, not the mechanics.
+(Omit the `<ISSUE-ID>` footer when there's no associated issue.)
+
+**Header** — a single line describing the commit, kept short enough to display in full on GitHub without truncation (aim for ~50 chars, hard limit ~72). The `WIP: ` prefix is *not* counted against this limit — write the header to fit the limit, then prepend `WIP: `. Always include `WIP: ` — it marks the commit as not yet reviewed by the author, so never drop it. Use the imperative mood and lead with the *why* or the outcome, not the mechanics.
 
 **Body** — succinct prose explaining *why* the change was made: the problem it addresses, the context a future developer would need, and any non-obvious decision behind the approach. Wrap as normal prose; don't narrate the diff line by line. Omit the body only if the header fully captures the intent and there's genuinely nothing to add.
+
+**Linked issue** — when the change has an associated issue (e.g. the branch's issue ID), add the issue ID as a footer line after the body, separated by a blank line. The issue already documents the product rationale, so don't restate it in the body — keep the body lean and spend it only on context the issue won't carry (a non-obvious technical decision or constraint), dropping the body entirely when there's nothing of that kind to add.
 
 ### Leave out (unless it's the entire point of the commit)
 
@@ -67,7 +73,9 @@ activate && git commit -F - <<'EOF'
 WIP: <header>
 
 <body>
+
+<ISSUE-ID>
 EOF
 ```
 
-Do not add `Co-Authored-By` or any other trailer. After committing, confirm with `git log -1 --stat` and report the result.
+Include the `<ISSUE-ID>` footer when there's an associated issue; otherwise omit it. Do not add `Co-Authored-By` or any attribution trailer. After committing, confirm with `git log -1 --stat` and report the result.

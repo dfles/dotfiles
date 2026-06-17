@@ -70,6 +70,8 @@ Look for:
 - **Alternatives** — Is there a simpler approach the author may not have considered? Existing patterns in the codebase that fit better?
 - **Best practices** — Reference project style guides and existing patterns. Call out deviations.
 
+Before reporting a finding, check whether the author has already acknowledged or tracked it — in the PR description, the PR conversation, an inline reply, or the linked Linear issue (including its parent/project description). A known limitation, deferred follow-up, or deploy step the author already flagged is not a fresh discovery. Still report it, but mark it as acknowledged so the reviewer knows it's already on the author's radar rather than missed (see the acknowledgment rule under output).
+
 ## 4. Validate any pending review drafts
 
 If the current user has unsubmitted draft comments on this PR, examine each one against the actual code **before** producing your own findings. For each draft, check:
@@ -88,10 +90,10 @@ Write the detailed review to `.sanction-review.md` in the current directory usin
 
 Structure:
 
-- If pending review drafts were provided, start the file with a `## Pending review draft feedback` section. Reference each draft by file:line, same item shape as below. If a draft is wrong, say so plainly.
+- If pending review drafts were provided, start the file with a `## Pending review draft feedback` section. Reference each draft by file:line, same item shape as below. Number these items `D1`, `D2`, `D3`, … (D-prefixed, separate from the findings sequence). If a draft is wrong, say so plainly.
 - Then severity bands as headings: `## High`, `## Medium`, `## Low`. Omit empty bands.
 - Within each band, group items by file path.
-- Number continuously across the entire file (1, 2, 3, …) so items can be referenced by number.
+- Number findings continuously across the severity bands starting at 1 (1, 2, 3, …) so items can be referenced by number. The draft section uses its own `D`-prefixed sequence; cross-references between the two use the appropriate prefix (e.g. "See item 2", "See D3").
 
 Each item uses exactly this shape — no extra prose, no preamble, no positive commentary:
 
@@ -108,13 +110,14 @@ Rules:
 - Banned hedging — do not write "consider", "perhaps", "might want to", "could potentially", "it would be worth", "you may want to", "I'd suggest", "if you have time". State the issue and the fix directly.
 - No "what was done well" section. Only feedback the author should act on.
 - Line references use `file.ext:LINE` or a range like `file.ext:120-145`.
+- Acknowledged items — when the author already tracks a finding in the PR or linked Linear issue, append `, acknowledged` to the severity tag (e.g. `[medium, acknowledged]`), name where it's tracked in the **Why** (e.g. "Author acknowledged this in the PR description"), and set **Fix:** to `n/a — tracked by author. Reporting only.`. Mirror the tag in the chat index summary.
 
 ### Artifact 2: chat index
 
 Your final message in this chat session contains only:
 
 - One line confirming `.sanction-review.md` was written.
-- The terse index, one line per item, in the same order as the file: `N. file:line [severity] summary`
+- The terse index, one line per item, in the same order as the file (drafts first, using their `D`-prefixed labels): `N. file:line [severity] summary`
 - A final line: "Ask to expand any item by number for more detail or alternatives."
 
 Do not paste full findings into chat — the reviewer reads the markdown file in their editor.

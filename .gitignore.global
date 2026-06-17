@@ -5,3 +5,5 @@ ideas*
 .claude-plans
 .worktrees
 .env.remote
+
+**/.claude/settings.local.json

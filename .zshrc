@@ -43,9 +43,10 @@ export HISTTIMEFORMAT="%Y-%m-%d %T "
 # Some git stuff
 alias gla='git log --oneline --color=always'
 alias gl='gla | head -n 10'
-alias gs='git log --oneline --stat'
+alias gls='git log --oneline --stat'
 alias g='git status'
 alias gd='git diff'
+alias gds='gd --stat'
 
 alias gga="git for-each-ref --color=always --sort=-committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' | less -iXFR"
 alias gg="gga | head -n 10"

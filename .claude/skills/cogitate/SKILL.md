@@ -36,4 +36,6 @@ Write to `RITE_OF_IMPLEMENTATION.md` in the current directory. If the file alrea
 4. **Testing Approach** — How to verify the implementation is correct.
 5. **Open Questions / Risks** — Anything needing clarification before work begins.
 
+Number every entry under **Open Questions / Risks** (`### 1.`, `### 2.`, …), even when there is only one. The engineer discusses these by number, so they must be individually addressable.
+
 Write only the plan. The engineer will review it before implementation starts.

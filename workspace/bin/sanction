@@ -8,6 +8,9 @@
 #
 # Usage: sanction <PR-NUMBER>   (e.g. sanction 20677)
 #
+# Options:
+#   --model=<id>   Model for the reviewing session (default: claude-opus-5[1m])
+#
 # Required environment:
 #   COGITATE_REPO    — Absolute path to the target repo
 #
@@ -43,14 +46,16 @@ echo ""
 # ── Validate ───────────────────────────────────────────────────────────────────
 PR_NUMBER=""
 DEPTH=""
+CLAUDE_MODEL="claude-opus-5[1m]"
 for arg in "$@"; do
     case "$arg" in
         --depth=*) DEPTH="${arg#--depth=}" ;;
+        --model=*) CLAUDE_MODEL="${arg#--model=}" ;;
         *)         PR_NUMBER="$arg" ;;
     esac
 done
 
-[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction [--depth=N] <PR-NUMBER>"
+[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction [--depth=N] [--model=<id>] <PR-NUMBER>"
 
 for cmd in tmux nvim git gh claude jq; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -332,7 +337,7 @@ tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 # Layout: claude reviewer | nvim review file
 tmux split-window -h -p 50 -t "${SESSION_NAME}:0.0" -c "$WORKTREE_PATH"
 
-tmux send-keys -t "${SESSION_NAME}:0.0" "claude --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" '/sanction'" Enter
+tmux send-keys -t "${SESSION_NAME}:0.0" "claude --model $(printf '%q' "$CLAUDE_MODEL") --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" '/sanction'" Enter
 # Auto-reload review.md when Claude rewrites it from outside the editor.
 tmux send-keys -t "${SESSION_NAME}:0.1" "nvim -c 'set autoread' -c 'autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * silent! checktime' .sanction-review.md" Enter
 tmux select-pane -t "${SESSION_NAME}:0.0"

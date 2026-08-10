@@ -7,6 +7,10 @@
 #
 # Usage: cogitate <ISSUE-ID>   (e.g. cogitate ENG-999999)
 #
+# Options:
+#   --model=<id>        Model for the interactive session (default: claude-opus-5[1m])
+#   --plan-model=<id>   Model for the Planning Cogitator (default: claude-fable-5)
+#
 # Required environment:
 #   LINEAR_API_KEY   — Linear personal API key
 #   COGITATE_REPO    — Absolute path to the target repo
@@ -42,16 +46,20 @@ NO_CLAUDE=false
 LINK_DEPS=true
 TARGET_BRANCH=""
 ISSUE_ID=""
+CLAUDE_MODEL="claude-opus-5[1m]"
+PLAN_MODEL="claude-fable-5"
 for arg in "$@"; do
     case "$arg" in
         --no-claude)    NO_CLAUDE=true ;;
         --no-link-deps) LINK_DEPS=false ;;
         --target=*)     TARGET_BRANCH="${arg#--target=}" ;;
+        --model=*)      CLAUDE_MODEL="${arg#--model=}" ;;
+        --plan-model=*) PLAN_MODEL="${arg#--plan-model=}" ;;
         *)              ISSUE_ID="$arg" ;;
     esac
 done
 
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] [--target=<branch>] <ISSUE-ID>"
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] [--target=<branch>] [--model=<id>] [--plan-model=<id>] <ISSUE-ID>"
 
 for cmd in curl jq git claude; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."
@@ -169,7 +177,7 @@ rite "III — Inscribing the Rite of Implementation"
 if [[ -f "$PLAN_FILE" ]]; then
     warning "A Rite of Implementation already exists — prior cognitation preserved."
 else
-    litany "Channeling the Omnissiah's wisdom through the Planning Cogitator..."
+    litany "Channeling the Omnissiah's wisdom through the Planning Cogitator (${PLAN_MODEL})..."
     litany "(This rite may require several moments of contemplation.)"
     echo ""
 
@@ -199,6 +207,7 @@ ${ISSUE_DESC}
         warning "Planning Cogitator silenced."
     else
         claude -p "$PLAN_PROMPT" \
+            --model "$PLAN_MODEL" \
             --allowedTools "Read,Write,Glob,Grep,LS" \
             --permission-mode bypassPermissions \
             --no-session-persistence \
@@ -261,5 +270,5 @@ cd "$WORKTREE_PATH"
 if [[ "$NO_CLAUDE" == true ]]; then
     blessed "Dry run complete. Worktree and plan ready at ${WORKTREE_PATH}"
 else
-    exec claude --append-system-prompt "$(printf '%s' "$CLAUDE_SYSTEM")"
+    exec claude --model "$CLAUDE_MODEL" --append-system-prompt "$(printf '%s' "$CLAUDE_SYSTEM")"
 fi

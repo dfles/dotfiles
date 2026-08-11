@@ -327,9 +327,7 @@ fi
 PROMPT_FILE="${WORKTREE_PATH}/.sanction-prompt"
 printf '%s' "$REVIEW_PROMPT" > "$PROMPT_FILE"
 
-# Pre-create the review file so nvim has something to open; Claude overwrites it.
 REVIEW_FILE="${WORKTREE_PATH}/.sanction-review.md"
-: > "$REVIEW_FILE"
 
 tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
 tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
@@ -338,8 +336,10 @@ tmux rename-window -t "${SESSION_NAME}:0" "PR #${PR_NUMBER}"
 tmux split-window -h -p 50 -t "${SESSION_NAME}:0.0" -c "$WORKTREE_PATH"
 
 tmux send-keys -t "${SESSION_NAME}:0.0" "claude --model $(printf '%q' "$CLAUDE_MODEL") --permission-mode acceptEdits --append-system-prompt \"\$(cat $(printf '%q' "$PROMPT_FILE"))\" '/sanction'" Enter
-# Auto-reload review.md when Claude rewrites it from outside the editor.
-tmux send-keys -t "${SESSION_NAME}:0.1" "nvim -c 'set autoread' -c 'autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * silent! checktime' .sanction-review.md" Enter
+# Wait for Claude to create the review file, then open it. Auto-reload picks up
+# any later rewrites from outside the editor.
+tmux send-keys -t "${SESSION_NAME}:0.1" \
+    "until [[ -f $(printf '%q' "$REVIEW_FILE") ]]; do sleep 1; done; nvim -c 'set autoread' -c 'autocmd CursorHold,CursorHoldI,FocusGained,BufEnter * silent! checktime' .sanction-review.md" Enter
 tmux select-pane -t "${SESSION_NAME}:0.0"
 
 # Window 1: terminal in the worktree

@@ -8,8 +8,11 @@
 # Usage: cogitate <ISSUE-ID>   (e.g. cogitate ENG-999999)
 #
 # Options:
-#   --model=<id>        Model for the interactive session (default: claude-opus-5[1m])
-#   --plan-model=<id>   Model for the Planning Cogitator (default: claude-fable-5)
+#   --model=<name>       Model for the interactive session (default: opus)
+#   --plan-model=<name>  Model for the Planning Cogitator (default: fable)
+#
+# Model names: opus, fable, sonnet, haiku resolve to the current release of
+# that family. Anything else is passed to claude verbatim.
 #
 # Required environment:
 #   LINEAR_API_KEY   — Linear personal API key
@@ -33,6 +36,19 @@ blessed() { echo -e "${GREEN}  ✦  ${1}${NC}"; }
 heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1; }
 warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
 
+# ── Model resolution ────────────────────────────────────────────────────────────
+# Short family names map to the current release; opus keeps the 1M context
+# suffix since the interactive session benefits from it.
+resolve_model() {
+    case "$1" in
+        opus)   echo "claude-opus-5[1m]" ;;
+        fable)  echo "claude-fable-5-1" ;;
+        sonnet) echo "claude-sonnet-5" ;;
+        haiku)  echo "claude-haiku-4-5" ;;
+        *)      echo "$1" ;;
+    esac
+}
+
 # ── Banner ──────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${GREEN}  ╔══════════════════════════════════════════════════════════╗${NC}"
@@ -46,8 +62,8 @@ NO_CLAUDE=false
 LINK_DEPS=true
 TARGET_BRANCH=""
 ISSUE_ID=""
-CLAUDE_MODEL="claude-opus-5[1m]"
-PLAN_MODEL="claude-fable-5"
+CLAUDE_MODEL="opus"
+PLAN_MODEL="fable"
 for arg in "$@"; do
     case "$arg" in
         --no-claude)    NO_CLAUDE=true ;;
@@ -58,8 +74,10 @@ for arg in "$@"; do
         *)              ISSUE_ID="$arg" ;;
     esac
 done
+CLAUDE_MODEL=$(resolve_model "$CLAUDE_MODEL")
+PLAN_MODEL=$(resolve_model "$PLAN_MODEL")
 
-[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] [--target=<branch>] [--model=<id>] [--plan-model=<id>] <ISSUE-ID>"
+[[ -z "$ISSUE_ID" ]] && heresy "No issue identifier provided.\n     Usage: cogitate [--no-claude] [--no-link-deps] [--target=<branch>] [--model=<name>] [--plan-model=<name>] <ISSUE-ID>"
 
 for cmd in curl jq git claude; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."

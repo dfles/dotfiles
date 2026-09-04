@@ -9,7 +9,10 @@
 # Usage: sanction <PR-NUMBER>   (e.g. sanction 20677)
 #
 # Options:
-#   --model=<id>   Model for the reviewing session (default: claude-opus-5[1m])
+#   --model=<name>   Model for the reviewing session (default: opus)
+#
+# Model names: opus, fable, sonnet, haiku resolve to the current release of
+# that family. Anything else is passed to claude verbatim.
 #
 # Required environment:
 #   COGITATE_REPO    — Absolute path to the target repo
@@ -35,6 +38,19 @@ blessed() { echo -e "${GREEN}  ✦  ${1}${NC}"; }
 heresy()  { echo -e "${RED}${BOLD}  ✗  HERESY DETECTED: ${1}${NC}" >&2; exit 1; }
 warning() { echo -e "${YELLOW}  ~  ${1}${NC}"; }
 
+# ── Model resolution ────────────────────────────────────────────────────────────
+# Short family names map to the current release; opus keeps the 1M context
+# suffix since the review session benefits from it.
+resolve_model() {
+    case "$1" in
+        opus)   echo "claude-opus-5[1m]" ;;
+        fable)  echo "claude-fable-5-1" ;;
+        sonnet) echo "claude-sonnet-5" ;;
+        haiku)  echo "claude-haiku-4-5" ;;
+        *)      echo "$1" ;;
+    esac
+}
+
 # ── Banner ──────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${CYAN}  ╔══════════════════════════════════════════════════════════╗${NC}"
@@ -46,7 +62,7 @@ echo ""
 # ── Validate ───────────────────────────────────────────────────────────────────
 PR_NUMBER=""
 DEPTH=""
-CLAUDE_MODEL="claude-opus-5[1m]"
+CLAUDE_MODEL="opus"
 for arg in "$@"; do
     case "$arg" in
         --depth=*) DEPTH="${arg#--depth=}" ;;
@@ -54,8 +70,9 @@ for arg in "$@"; do
         *)         PR_NUMBER="$arg" ;;
     esac
 done
+CLAUDE_MODEL=$(resolve_model "$CLAUDE_MODEL")
 
-[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction [--depth=N] [--model=<id>] <PR-NUMBER>"
+[[ -z "$PR_NUMBER" ]] && heresy "No PR number provided.\n     Usage: sanction [--depth=N] [--model=<name>] <PR-NUMBER>"
 
 for cmd in tmux nvim git gh claude jq; do
     command -v "$cmd" &>/dev/null || heresy "Required instrument '${cmd}' absent from the machine spirit matrix."

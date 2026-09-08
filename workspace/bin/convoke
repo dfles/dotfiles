@@ -102,7 +102,7 @@ if [[ -z "$BRANCH_NAME" ]]; then
         | sed 's/--*/-/g' \
         | sed 's/^-\|-$//g' \
         | cut -c1-50)
-    BRANCH_NAME="$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')-${SLUG}"
+    BRANCH_NAME="$(echo "$ISSUE_ID")"
 fi
 
 WORKTREE_PATH="${REPO}/.worktrees/${BRANCH_NAME}"

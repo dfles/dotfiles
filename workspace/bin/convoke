@@ -71,13 +71,12 @@ if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     exit 0
 fi
 
-# ── Resolve worktree path via Linear ───────────────────────────────────────────
-litany "Querying Linear to resolve worktree path..."
+# ── Verify the issue exists before convening ──────────────────────────────────
+litany "Querying Linear for ${ISSUE_ID}..."
 
 QUERY='query IssueById($id: String!) {
   issue(id: $id) {
     title
-    branchName
   }
 }'
 
@@ -94,18 +93,8 @@ fi
 ISSUE_TITLE=$(echo "$RESPONSE" | jq -r '.data.issue.title // empty')
 [[ -z "$ISSUE_TITLE" ]] && heresy "Issue ${ISSUE_ID} not found in the Linear archives."
 
-BRANCH_NAME=$(echo "$RESPONSE" | jq -r '.data.issue.branchName // empty')
-if [[ -z "$BRANCH_NAME" ]]; then
-    SLUG=$(echo "$ISSUE_TITLE" \
-        | tr '[:upper:]' '[:lower:]' \
-        | sed 's/[^a-z0-9]/-/g' \
-        | sed 's/--*/-/g' \
-        | sed 's/^-\|-$//g' \
-        | cut -c1-50)
-    BRANCH_NAME="$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')-${SLUG}"
-fi
-
-WORKTREE_PATH="${REPO}/.worktrees/${BRANCH_NAME}"
+# Must match cogitate's worktree naming
+WORKTREE_PATH="${REPO}/.worktrees/${SESSION_NAME}"
 PLAN_FILE="${WORKTREE_PATH}/RITE_OF_IMPLEMENTATION.md"
 
 # ── Assemble the congregation ───────────────────────────────────────────────────

@@ -153,7 +153,8 @@ rite "II — Consecration of the Code Reliquary"
 litany "Worktree branch: ${BRANCH_NAME}"
 
 mkdir -p "$WORKTREES_DIR"
-WORKTREE_PATH="${WORKTREES_DIR}/${BRANCH_NAME}"
+# Directory is keyed by issue id, not branch name, to keep paths short
+WORKTREE_PATH="${WORKTREES_DIR}/$(echo "$ISSUE_ID" | tr '[:upper:]' '[:lower:]')"
 
 if [[ -d "$WORKTREE_PATH" ]]; then
     warning "Reliquary already exists — the Machine Spirit preserves prior work."

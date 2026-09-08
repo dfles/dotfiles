@@ -235,7 +235,12 @@ git -C "$REPO" fetch origin >/dev/null 2>&1
 git -C "$REPO" fetch origin "$BRANCH" >/dev/null 2>&1 || true
 
 WORKTREES_DIR="${REPO}/.worktrees"
-WORKTREE_NAME="review-$(echo "$BRANCH" | tr '/' '-' | tr '.' '-')"
+# Key by issue id when the branch carries one; fall back to the PR number
+if [[ -n "$BRANCH_ISSUE" ]]; then
+    WORKTREE_NAME="review-$(echo "$BRANCH_ISSUE" | tr '[:upper:]' '[:lower:]')"
+else
+    WORKTREE_NAME="review-pr-${PR_NUMBER}"
+fi
 WORKTREE_PATH="${WORKTREES_DIR}/${WORKTREE_NAME}"
 SESSION_NAME="$WORKTREE_NAME"
 

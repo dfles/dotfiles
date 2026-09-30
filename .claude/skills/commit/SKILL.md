@@ -40,10 +40,10 @@ WIP: <header>
 
 <body>
 
-<ISSUE-ID>
+Refs: <ISSUE-ID>
 ```
 
-(Omit the `<ISSUE-ID>` footer when there's no associated issue.)
+(Omit the `Refs:` footer when there's no associated issue.)
 
 **Header** — a single line describing the commit, kept short enough to display in full on GitHub without truncation (aim for ~50 chars, hard limit ~72). The `WIP: ` prefix is *not* counted against this limit — write the header to fit the limit, then prepend `WIP: `. Always include `WIP: ` — it marks the commit as not yet reviewed by the author, so never drop it. Use the imperative mood and lead with the *why* or the outcome, not the mechanics.
 
@@ -51,7 +51,7 @@ WIP: <header>
 
 Never explain *what* the code does or *how* it works — that is what the diff is for. Two litmus tests before keeping a sentence: (1) if it could be reconstructed by reading the diff, cut it; (2) if it names specific functions, flags, classes, or methods, you have almost certainly drifted into the *what* — restate the problem in domain terms or cut it. Err on the side of cutting: a too-short message costs a `git show`, a bloated one trains the reader to skip commit messages.
 
-**Linked issue** — when the change has an associated issue (e.g. the branch's issue ID), add the issue ID as a footer line after the body, separated by a blank line. The issue already documents the product rationale, so don't restate it in the body — keep the body lean and spend it only on context the issue won't carry (a non-obvious technical decision or constraint), dropping the body entirely when there's nothing of that kind to add.
+**Linked issue** — when the change has an associated issue (e.g. the branch's issue ID), add a `Refs: <ISSUE-ID>` footer line after the body, separated by a blank line. The `Refs:` prefix is required, not decoration: Linear's release CLI only recognizes an issue key in the commit body when a magic word precedes it, so a bare ID in the footer silently drops the commit from the release. The issue already documents the product rationale, so don't restate it in the body — keep the body lean and spend it only on context the issue won't carry (a non-obvious technical decision or constraint), dropping the body entirely when there's nothing of that kind to add.
 
 ### Leave out (unless it's the entire point of the commit)
 
@@ -77,8 +77,8 @@ WIP: <header>
 
 <body>
 
-<ISSUE-ID>
+Refs: <ISSUE-ID>
 EOF
 ```
 
-Include the `<ISSUE-ID>` footer when there's an associated issue; otherwise omit it. Do not add `Co-Authored-By` or any attribution trailer. After committing, confirm with `git log -1 --stat` and report the result.
+Include the `Refs: <ISSUE-ID>` footer when there's an associated issue; otherwise omit it. Do not add `Co-Authored-By` or any attribution trailer. After committing, confirm with `git log -1 --stat` and report the result.

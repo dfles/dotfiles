@@ -1,10 +1,10 @@
 ---
-name: commit
-description: Write a commit message for the currently staged changes and create the commit. Focuses the message on *why* the change was made rather than *what* changed, in a header plus optional short body. Prepends "WIP: " to the header and creates the commit with no co-author. Use when the user invokes `/commit` or asks to commit staged changes with a generated message.
+name: inscribe
+description: Write a commit message for the currently staged changes and create the commit. Focuses the message on *why* the change was made rather than *what* changed, in a header plus optional short body. Prepends "WIP: " to the header and creates the commit with no co-author. Use when the user invokes `/inscribe` or asks to commit staged changes with a generated message.
 user_invocable: true
 ---
 
-# commit
+# inscribe
 
 Generate a commit message for the currently staged changes and create the commit.
 

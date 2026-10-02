@@ -1,12 +1,12 @@
 ---
-name: rubber-ducky
-description: Build context around a Linear issue so the user can start talking and thinking through the problem. Use when the user invokes `/rubber-ducky <ISSUE-ID-or-link>` or asks to get up to speed on / warm up context for a specific Linear ticket. Fetches the issue (and its comments, parent, project) from Linear, reads the relevant parts of the codebase, then reports a short summary of the understood problem for verification and asks clarifying questions. Does NOT plan or start implementation.
+name: inload
+description: Build context around a Linear issue so the user can start talking and thinking through the problem. Use when the user invokes `/inload <ISSUE-ID-or-link>` or asks to get up to speed on / warm up context for a specific Linear ticket. Fetches the issue (and its comments, parent, project) from Linear, reads the relevant parts of the codebase, then reports a short summary of the understood problem for verification and asks clarifying questions. Does NOT plan or start implementation.
 user_invocable: true
 ---
 
-# rubber-ducky
+# inload
 
-Warm up context around a Linear issue so the user can start thinking out loud about it. Invoked as `/rubber-ducky <ISSUE-ID-or-link>`.
+Warm up context around a Linear issue so the user can start thinking out loud about it. Invoked as `/inload <ISSUE-ID-or-link>`.
 
 The user is using this to load shared context — you are a rubber ducky who has read the ticket, and sometimes the implementer later. The goal is a shared, verified understanding of the problem. **Do not write an implementation plan, propose a solution, or start work.** Stop after the summary and questions.
 

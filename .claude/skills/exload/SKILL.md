@@ -1,16 +1,16 @@
 ---
-name: pr-desc
-description: Write a PR description to pr-desc.md at the repo root. Summarizes the commits on the current branch in a fixed skeleton (title, intro, "What changed", "Closes X") with optional sections for behavior changes and follow-ups when the commits warrant them. Use when the user invokes `/pr-desc` (default scope: commits diverged from main) or `/pr-desc <N>` (override to the last N commits).
+name: exload
+description: Write a PR description to pr-desc.md at the repo root. Summarizes the commits on the current branch in a fixed skeleton (title, intro, "What changed", "Closes X") with optional sections for behavior changes and follow-ups when the commits warrant them. Use when the user invokes `/exload` (default scope: commits diverged from main) or `/exload <N>` (override to the last N commits).
 user_invocable: true
 ---
 
-# pr-desc
+# exload
 
 Produce a PR description for the current branch and write it to `pr-desc.md` at the repo root.
 
 Invocation:
-- `/pr-desc` — summarize commits diverged from `main`.
-- `/pr-desc <N>` — summarize the last N commits.
+- `/exload` — summarize commits diverged from `main`.
+- `/exload <N>` — summarize the last N commits.
 
 ## 1. Gather commits
 

@@ -32,7 +32,13 @@ The skeleton has four required parts:
 
 1. **Title** — `## <ISSUE-ID>: <short summary>` (or just `## <short summary>` if no issue ID). The summary should answer "what's the takeaway of this PR" in under ~70 chars.
 2. **Intro paragraph** — 2–4 sentences naming the *why*: the problem the PR addresses, ideally with the visible symptom. Don't narrate the implementation.
-3. **`## What changed`** — bullet list of the load-bearing changes. One bullet per coherent change (typically one bullet per commit, but merge or split as needed). Lead each bullet with the *what* (bolded), then a sentence on the *why* or the shape.
+3. **`## What changed`** — bullet list of the load-bearing changes. One bullet per coherent change (typically one bullet per commit, but merge or split as needed). Lead each bullet with the *what* (bolded), then one or two sentences that **state the decision made**, not describe the implementation: the rule chosen, the boundary drawn, what was deliberately left alone. That gives the reviewer something to agree or push back on. Do not tell the reviewer what to scrutinize or where to look; the tag carries the weight and the decision starts the conversation. Litmus test: if a sentence could be reconstructed by reading the diff, cut it.
+
+   Every bullet starts with a bracketed review tag inside the bold lead (`- **[decision] Rostered evaluators can …**`), so the list scans as a column when GitHub or Linear renders it; never leave one untagged and never put the weight in a trailing remark. Each tag answers "how do I review this", not "what kind of change is it":
+   - `[decision]` — a rule, trade-off, or boundary was chosen; the bullet states it. A new column or field whose gating or defaults were chosen is still a decision.
+   - `[shared]` — touches a shared component or module other callers depend on.
+   - `[mechanical]` — renames, moves, and reformatting.
+   When two apply, take the one that demands more attention.
 4. **Closes line** — `Closes <ISSUE-ID>` at the very bottom, separated by a blank line. Omit if the issue ID couldn't be inferred.
 
 Add these conditional sections **only when the commits actually warrant them**:
@@ -41,7 +47,7 @@ Add these conditional sections **only when the commits actually warrant them**:
 - **`## Follow-ups`** or **`## Affects upcoming work`** — when commits explicitly hand off deferred work or scope. Reference issue IDs, but only for follow-ups that carry real context (work intentionally cut, a known gap, a dependency that shapes review). Do **not** add bullets that merely note another issue is now unblocked — that belongs in the issue tracker, not the PR.
 
 Tone:
-- Tight. Focus on *why* and *impact*, not *how*.
+- Tight. Focus on *why* and *impact*, not *how*. A bullet that narrates mechanism (which method reads which set, what a query does) is the diff restated; replace it with what the reviewer should check.
 - Write for a reviewer who didn't see the conversation that produced this work.
 - No emojis. No "this PR" filler. No restating the commit subject as a bullet.
 - Don't restate what GitHub's own UI already shows — target/base branch, labels, commit list, file counts. No standalone "reviewer notes" section for this.

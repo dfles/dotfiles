@@ -177,6 +177,14 @@ if [[ -f "${REPO}/.env" && ! -e "${WORKTREE_PATH}/.env" ]]; then
     litany ".env linked."
 fi
 
+for f in CLAUDE.local.md .claude/settings.local.json; do
+    if [[ -f "${REPO}/${f}" && ! -e "${WORKTREE_PATH}/${f}" ]]; then
+        mkdir -p "$(dirname "${WORKTREE_PATH}/${f}")"
+        ln -s "${REPO}/${f}" "${WORKTREE_PATH}/${f}"
+        litany "${f} linked."
+    fi
+done
+
 if [[ "$LINK_DEPS" == true ]]; then
     if [[ -d "${REPO}/.venv" && ! -e "${WORKTREE_PATH}/.venv" ]]; then
         ln -s "${REPO}/.venv" "${WORKTREE_PATH}/.venv"

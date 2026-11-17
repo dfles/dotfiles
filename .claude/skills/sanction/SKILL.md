@@ -12,7 +12,7 @@ Review a GitHub pull request and produce structured, actionable feedback. Invoke
 
 Resolve which PR to review in this order:
 
-1. **Pre-fetched context** — if the system prompt already identifies a PR (the `sanction` bin wrapper provides PR number, branch, URL, commits, plus discussion / Linear / pending-draft blocks), use that and **skip section 1 entirely**. Do not re-fetch.
+1. **Pre-fetched context** — if the system prompt already identifies a PR (the `sanction` bin wrapper provides PR number, branch, URL, commits, the PR description, plus discussion / Linear / pending-draft blocks), use that and skip section 1. Do not re-fetch what is provided. The one exception is the PR description: if the context has no `--- PR Description ---` block, fetch it with `gh pr view <PR> --json body --jq .body` before examining.
 2. **Explicit arg** — if the user passed a PR number, use it.
 3. **Current branch** — `gh pr view --json number,headRefName,baseRefName,...` with no number argument inspects the PR for the current branch. Use this when invoked from a worktree without an explicit PR.
 
@@ -21,6 +21,8 @@ If none of these resolve, ask the user for a PR number before continuing.
 ## 1. Gather context
 
 Fetch the PR body, conversation, reviews, and inline comments. The `gh` CLI infers the repo from the current working directory.
+
+Always read the PR description before examining the changeset. It holds the author's stated decisions, behavior changes, and follow-ups, and it is the first place to check whether a finding is already acknowledged.
 
 ```bash
 gh pr view <PR> --json headRefName,baseRefName,title,body,url,commits,comments,reviews

@@ -331,6 +331,18 @@ Read the changeset with:
   git diff origin/${BASE_BRANCH}...HEAD       # full changeset"
 fi
 
+if [[ -n "$PR_BODY" && "$PR_BODY" != "null" ]]; then
+    REVIEW_PROMPT+="
+
+--- PR Description ---
+${PR_BODY}"
+else
+    REVIEW_PROMPT+="
+
+--- PR Description ---
+(empty)"
+fi
+
 if [[ -n "$LINEAR_CONTEXT" ]]; then
     REVIEW_PROMPT+="
 

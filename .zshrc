@@ -46,6 +46,7 @@ alias gl='gla | head -n 10'
 alias gls='git log --oneline --stat'
 alias g='git status'
 alias gd='git diff'
+alias gdr="gd -- ':!**/test*'"
 alias gds='gd --stat'
 
 alias gga="git for-each-ref --color=always --sort=-committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))' | less -iXFR"
